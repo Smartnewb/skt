@@ -1,3 +1,4 @@
+import { getBankName } from '@/lib/bankNames';
 'use client';
 
 import React from 'react';
@@ -279,7 +280,7 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                         <InfoItem label="납부 방식" value={payment?.method === 'BANK_TRANSFER' ? '은행 자동이체' : '카드 결제'} />
                         {payment?.method === 'BANK_TRANSFER' && (
                             <>
-                                <InfoItem label="은행" value={payment.bankCode} />
+                                <InfoItem label="은행" value={payment?.bankCode ? getBankName(payment.bankCode) : undefined} />
                                 <InfoItem label="계좌번호" value={maskSensitiveData(payment.accountNumber || '', 4)} />
                             </>
                         )}
