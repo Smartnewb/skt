@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { getBankName } from '@/lib/bankNames';
+import { formatAccountNumber } from '@/lib/bankFormats';
 import { formatCurrency } from '@/lib/validation';
 import { ApplicationData } from '@/types/application';
 import { motion } from 'framer-motion';
@@ -281,7 +282,7 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                         {payment?.method === 'BANK_TRANSFER' && (
                             <>
                                 <InfoItem label="은행" value={payment?.bankCode ? getBankName(payment.bankCode) : undefined} />
-                                <InfoItem label="계좌번호" value={payment.accountNumber || ''} />
+                                <InfoItem label="계좌번호" value={payment?.bankCode && payment?.accountNumber ? formatAccountNumber(payment.bankCode, payment.accountNumber) : payment?.accountNumber || ''} />
                             </>
                         )}
                         {payment?.method === 'CARD' && (
@@ -303,8 +304,8 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                     <h2 className="text-lg font-bold text-text-primary mb-4">사은품 수령 정보</h2>
                     <div className="grid grid-cols-2 gap-4">
                         <InfoItem label="수령인" value={giftRecipient?.name} />
-                        <InfoItem label="은행" value={giftRecipient?.bankCode} />
-                        <InfoItem label="계좌번호" value={giftRecipient?.accountNumber || ''} />
+                        <InfoItem label="은행" value={giftRecipient?.bankCode ? getBankName(giftRecipient.bankCode) : undefined} />
+                        <InfoItem label="계좌번호" value={giftRecipient?.bankCode && giftRecipient?.accountNumber ? formatAccountNumber(giftRecipient.bankCode, giftRecipient.accountNumber) : giftRecipient?.accountNumber || ''} />
                         <InfoItem label="상품권 옵션" value={giftRecipient?.giftCardOption} />
                     </div>
                 </motion.div>
