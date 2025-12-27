@@ -10,6 +10,7 @@ import { useApplicationStore } from '@/store/useApplicationStore';
 import { Relationship, ResidentType, GiftRecipientInfo } from '@/types/application';
 import { BANKS, GIFT_CARD_OPTIONS } from '@/lib/mockData';
 import { validateAccountNumber } from '@/lib/validation';
+import { formatAccountNumber, validateAccountFormat } from '@/lib/bankFormats';
 import { motion } from 'framer-motion';
 
 const RELATIONSHIPS = [
@@ -75,6 +76,30 @@ export default function GiftPage() {
         if (errors[field]) {
             setErrors({ ...errors, [field]: '' });
         }
+
+    // Handle account number input with auto-formatting
+    const handleAccountNumberChange = (value: string) => {
+        if (formData.bankCode) {
+            const formatted = formatAccountNumber(formData.bankCode, value);
+            setFormData({ ...formData, accountNumber: formatted });
+        } else {
+            const cleaned = value.replace(/[^0-9]/g, '');
+            setFormData({ ...formData, accountNumber: cleaned });
+        }
+        if (errors.accountNumber) {
+            setErrors({ ...errors, accountNumber: '' });
+        }
+    };
+
+    // Reformat when bank changes
+    React.useEffect(() => {
+        if (formData.bankCode && formData.accountNumber) {
+            const formatted = formatAccountNumber(formData.bankCode, formData.accountNumber);
+            if (formatted !== formData.accountNumber) {
+                setFormData(prev => ({ ...prev, accountNumber: formatted }));
+            }
+        }
+    }, [formData.bankCode]);
     };
 
     const showResidentTypeSelector =
@@ -217,7 +242,7 @@ export default function GiftPage() {
                         label="계좌번호를 입력해주세요"
                         conversational
                         value={formData.accountNumber || ''}
-                        onChange={(e) => handleInputChange('accountNumber', e.target.value)}
+                        onChange={(e) => handleAccountNumberChange(e.target.value)}
                         error={errors.accountNumber}
                         placeholder="1234567890"
                     />
