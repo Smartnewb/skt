@@ -22,6 +22,7 @@ const RELATIONSHIPS = [
 export default function GiftPage() {
     const router = useRouter();
     const applicant = useApplicationStore((state) => state.applicant); // Get applicant info
+    const payment = useApplicationStore((state) => state.payment); // Get payment info
     const giftRecipient = useApplicationStore((state) => state.giftRecipient);
     const setGiftRecipient = useApplicationStore((state) => state.setGiftRecipient);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
@@ -41,13 +42,16 @@ export default function GiftPage() {
 
     const handleInputChange = (field: string, value: string) => {
         // Auto-fill when SELF is selected
-        if (field === 'relationship' && value === 'SELF' && applicant) {
+        if (field === 'relationship' && value === 'SELF' && applicant && payment) {
             setFormData({
                 ...formData,
                 relationship: 'SELF',
                 name: applicant.name,
                 birthDateOrRegNumber: applicant.birthDate,
                 residentType: 'DOMESTIC',
+                // Auto-fill bank and account from payment info
+                bankCode: payment.bankCode || '',
+                accountNumber: payment.accountNumber || '',
             });
         } else {
             setFormData({ ...formData, [field]: value });
