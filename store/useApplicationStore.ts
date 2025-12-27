@@ -20,7 +20,7 @@ interface ApplicationStore extends ApplicationData {
     setGiftRecipient: (gift: ApplicationData['giftRecipient']) => void;
     setTerms: (terms: ApplicationData['terms']) => void;
     setCustomerRequest: (request: string) => void;
-    setAgreements: (agreements: any) => set({ agreements }),
+    setAgreements: (agreements: any) => void;
     submit: () => void;
     reset: () => void;
 }
@@ -38,6 +38,7 @@ export const useApplicationStore = create<ApplicationStore>()(
             giftRecipient: undefined,
             terms: undefined,
             customerRequest: undefined,
+            agreements: null,
             submittedAt: undefined,
             status: 'PENDING',
 
@@ -59,7 +60,8 @@ export const useApplicationStore = create<ApplicationStore>()(
             setTerms: (terms) => set({ terms }),
 
             setCustomerRequest: (customerRequest) => set({ customerRequest }),
-    setAgreements: (agreements: any) => set({ agreements }),
+
+            setAgreements: (agreements) => set({ agreements }),
 
             submit: () => {
                 const data = get();
@@ -95,6 +97,7 @@ export const useApplicationStore = create<ApplicationStore>()(
                 giftRecipient: undefined,
                 terms: undefined,
                 customerRequest: undefined,
+                agreements: null,
                 submittedAt: undefined,
                 status: 'PENDING',
             }),
