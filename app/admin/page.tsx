@@ -12,6 +12,7 @@ import { useAdminAuth, logout } from '@/lib/adminAuth';
 
 export default function AdminPage() {
     useAdminAuth(); // Protect this page
+    const router = useRouter();
 
     const [applications, setApplications] = React.useState<(ApplicationData & { id: string })[]>([]);
     const [filter, setFilter] = React.useState<'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED'>('ALL');
