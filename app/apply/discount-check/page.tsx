@@ -52,7 +52,7 @@ export default function DiscountCheckPage() {
                         className="mb-8"
                     >
                         <label className="label-conversational">
-                            SK텔레콤/SK7모바일 휴대폰을<br />사용하시는 분이 계신가요?
+                            SK텔레콤 휴대폰을<br />사용하시는 분이 계신가요?
                         </label>
                         <div className="grid grid-cols-2 gap-3 mt-4">
                             <motion.button
