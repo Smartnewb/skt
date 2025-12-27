@@ -10,6 +10,8 @@ import { useApplicationStore } from '@/store/useApplicationStore';
 import { PaymentMethod, Relationship, PaymentInfo } from '@/types/application';
 import { BANKS, CARD_COMPANIES } from '@/lib/mockData';
 import { validateAccountNumber, validateCardNumber, validateCardExpiry } from '@/lib/validation';
+import { formatAccountNumber, validateAccountFormat } from '@/lib/bankFormats';
+
 import { motion } from 'framer-motion';
 import * as Checkbox from '@radix-ui/react-checkbox';
 
@@ -40,6 +42,30 @@ export default function PaymentPage() {
         setFormData({ ...formData, [field]: value });
         if (errors[field]) {
             setErrors({ ...errors, [field]: '' });
+
+    // Handle account number input with auto-formatting
+    const handleAccountNumberChange = (value: string) => {
+        if (formData.bankCode) {
+            const formatted = formatAccountNumber(formData.bankCode, value);
+            setFormData({ ...formData, accountNumber: formatted });
+        } else {
+            const cleaned = value.replace(/[^0-9]/g, '');
+            setFormData({ ...formData, accountNumber: cleaned });
+        }
+        if (errors.accountNumber) {
+            setErrors({ ...errors, accountNumber: '' });
+        }
+    };
+
+    // Reformat when bank changes
+    React.useEffect(() => {
+        if (formData.bankCode && formData.accountNumber) {
+            const formatted = formatAccountNumber(formData.bankCode, formData.accountNumber);
+            if (formatted !== formData.accountNumber) {
+                setFormData(prev => ({ ...prev, accountNumber: formatted }));
+            }
+        }
+    }, [formData.bankCode]);
         }
     };
 
@@ -221,9 +247,10 @@ export default function PaymentPage() {
                                 label="계좌번호를 입력해주세요"
                                 conversational
                                 value={formData.accountNumber || ''}
-                                onChange={(e) => handleInputChange('accountNumber', e.target.value)}
+                                onChange={(e) => handleAccountNumberChange(e.target.value)}
                                 error={errors.accountNumber}
-                                placeholder="1234567890"
+                                placeholder="숫자만 입력하세요"
+                                maxLength={20}
                             />
 
                             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
