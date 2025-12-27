@@ -165,7 +165,7 @@ export default function AdminPage() {
                             <p className="text-text-secondary">신청 내역이 없습니다</p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-border">
                                     <tr>
@@ -247,6 +247,53 @@ export default function AdminPage() {
                             </table>
                         </div>
                     )}
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                {filteredApplications.map((app) => (
+                    <div
+                        key={app.id}
+                        onClick={() => router.push(`/admin/applications/${app.id}`)}
+                        className="bg-white rounded-xl p-4 shadow border border-gray-200 active:bg-gray-50 cursor-pointer"
+                    >
+                        <div className="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 className="font-bold text-text-primary text-base">{app.applicant?.name}</h3>
+                                <p className="text-sm text-gray-600">{app.applicant?.phone}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                app.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                app.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
+                                'bg-green-100 text-green-800'
+                            }`}>
+                                {app.status === 'PENDING' ? '접수 대기' :
+                                 app.status === 'PROCESSING' ? '처리중' : '완료'}
+                            </span>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm border-t border-gray-200 pt-3">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">상품:</span>
+                                <span className="font-medium text-right">{app.product?.speed}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">월 요금:</span>
+                                <span className="font-medium text-primary">{app.product?.monthlyPrice ? `${app.product.monthlyPrice.toLocaleString()}원` : '-'}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">신청일:</span>
+                                <span className="text-gray-700">
+                                    {app.submittedAt ? new Date(app.submittedAt).toLocaleString('ko-KR') : '-'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 text-right">
+                            <span className="text-xs text-primary font-medium">상세보기 →</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
                 </div>
             </div>
         </div>
