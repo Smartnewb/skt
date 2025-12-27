@@ -101,21 +101,20 @@ export default function CompletePage() {
                 </motion.div>
 
                 {/* Action Buttons */}
+                {/* Actions */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.8 }}
                     className="space-y-3"
                 >
-                    <Button onClick={() => router.push('/admin')}>
-                        관리자 페이지 바로가기
-                    </Button>
-                    <button
-                        onClick={handleNewApplication}
-                        className="w-full py-3 text-text-secondary font-semibold"
+                    <Link
+                        href="/"
+                        onClick={handleNewApplication} // Added onClick to reset store
+                        className="block w-full py-4 bg-primary text-white text-center rounded-xl font-bold text-lg hover:bg-primary-dark transition"
                     >
                         새 신청하기
-                    </button>
+                    </Link>
                 </motion.div>
 
                 {/* Additional Info */}
