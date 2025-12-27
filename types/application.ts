@@ -18,6 +18,7 @@ export interface ProductInfo {
   category: ProductCategory;
   speed: Speed;
   tvType?: string; // Only for INTERNET_TV
+  tvDevice?: string; // TV device type (IPTV, UHD, etc.)
   discountType: DiscountType;
 
   // Pricing
@@ -35,6 +36,7 @@ export interface PriceTable {
   category: ProductCategory;
   speed: Speed;
   tvType?: string;
+  tvDevice?: string; // TV device type (IPTV, UHD, etc.)
   cashBenefit: number;
   prices: {
     general: number;
