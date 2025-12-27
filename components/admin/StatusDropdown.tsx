@@ -29,7 +29,14 @@ export function mapOldStatus(oldStatus: string): AdminStatus {
         'PROCESSING': 'CONSULTING',
         'COMPLETED': 'INSTALLED',
     };
-    return mapping[oldStatus] || (oldStatus as AdminStatus) || 'NEW';
+    const mapped = mapping[oldStatus] || (oldStatus as AdminStatus);
+
+    // Debug logging
+    if (!STATUS_CONFIG[mapped as AdminStatus]) {
+        console.warn('⚠️ Unknown status:', { original: oldStatus, mapped });
+    }
+
+    return mapped || 'NEW';
 }
 
 interface StatusDropdownProps {
@@ -99,7 +106,17 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
     const mappedStatus = mapOldStatus(status);
-    const config = STATUS_CONFIG[mappedStatus] || STATUS_CONFIG.NEW;
+    const config = STATUS_CONFIG[mappedStatus as AdminStatus];
+
+    // Fallback for unknown statuses
+    if (!config) {
+        console.error('❌ No config for status:', { original: status, mapped: mappedStatus });
+        return (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+                {status || '알 수 없음'}
+            </span>
+        );
+    }
 
     return (
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${config.bgColor} ${config.color}`}>
