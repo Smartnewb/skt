@@ -88,7 +88,6 @@ export default function HomePage() {
       <div className="px-6 mt-8 mb-8">
         <h3 className="text-lg font-bold text-text-primary mb-4">📌 유용한 정보</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 설치주소 조회 */}
           <a
             href="https://www.bworld.co.kr/myb/product/join/address/svcAveSearch.do"
