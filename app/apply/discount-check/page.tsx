@@ -74,7 +74,7 @@ export default function DiscountCheckPage() {
                             </motion.button>
                         </div>
                         <p className="text-xs text-text-secondary mt-3">
-                            💡 SK 휴대폰을 쓰시면 가장 저렴해요!
+                            💡 SK텔레콤 휴대폰을 쓰시면 가장 저렴해요!
                         </p>
                     </motion.div>
                 </div>
