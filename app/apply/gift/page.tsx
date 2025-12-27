@@ -242,7 +242,7 @@ export default function GiftPage() {
                         label="계좌번호를 입력해주세요"
                         conversational
                         value={formData.accountNumber || ''}
-                        onChange={(e) => handleAccountNumberChange(e.target.value)}
+                        onChange={(e) => handleInputChange('accountNumber', e.target.value)}
                         error={errors.accountNumber}
                         placeholder="1234567890"
                     />
