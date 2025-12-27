@@ -40,6 +40,21 @@ export default function GiftPage() {
     );
     const [errors, setErrors] = React.useState<Record<string, string>>({});
 
+    // Auto-fill on initial load if relationship is SELF
+    React.useEffect(() => {
+        if (formData.relationship === 'SELF' && applicant && payment && !formData.name) {
+            setFormData({
+                ...formData,
+                relationship: 'SELF',
+                name: applicant.name,
+                birthDateOrRegNumber: applicant.birthDate,
+                residentType: 'DOMESTIC',
+                bankCode: payment.bankCode || '',
+                accountNumber: payment.accountNumber || '',
+            });
+        }
+    }, [applicant, payment]); // Run when applicant or payment data is available
+
     const handleInputChange = (field: string, value: string) => {
         // Auto-fill when SELF is selected
         if (field === 'relationship' && value === 'SELF' && applicant && payment) {
@@ -105,7 +120,7 @@ export default function GiftPage() {
                         사은품 받을 분 정보를 입력해주세요
                     </h1>
                     <p className="text-sm text-text-secondary">
-                        가장 중요한 혜택을 받을 곳이에요 💰
+                        신세계상품권 13만 원 + 현금 💰
                     </p>
                 </motion.div>
 
