@@ -156,11 +156,6 @@ export const TERMS: TermItem[] = [
                                 <td class="border border-gray-300 px-2 py-2">개인정보 수집 또는 제공 목적 달성 시 파기</td>
                             </tr>
                             <tr>
-                                <td class="border border-gray-300 px-2 py-2">㈜링크프라이스</td>
-                                <td class="border border-gray-300 px-2 py-2">제휴 트래킹, 구매 확인 및 정산</td>
-                                <td class="border border-gray-300 px-2 py-2">방문내역ID(ULID)</td>
-                                <td class="border border-gray-300 px-2 py-2">개인정보 수집 또는 제공 목적 달성 시 파기</td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
