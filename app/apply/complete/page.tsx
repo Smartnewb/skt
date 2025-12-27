@@ -101,6 +101,55 @@ export default function CompletePage() {
                     </div>
                 </motion.div>
 
+                {/* Privacy Notice Section */}
+                <div className="bg-gray-50 rounded-2xl p-6 mt-6 text-left space-y-4">
+                    <div className="border-b border-gray-200 pb-3 mb-4">
+                        <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
+                            <span className="text-xl">🎁</span>
+                            사은품 필수 안내사항
+                        </h3>
+                    </div>
+                    
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-yellow-900 leading-relaxed">
+                            사은품 수령 후 <strong>1년 이내</strong> 해지, 일시정지, 미납, 직권해지, 상품인하, 동일명의 상품 해지 시 사은품은 <strong>전액 회수</strong> 요청됩니다.
+                        </p>
+                    </div>
+
+                    <div className="space-y-3 text-sm text-text-secondary">
+                        <p className="leading-relaxed">
+                            당사는 개인정보를 어설프게 활용하거나, 경솔하게 취급하지 않습니다. 모든 개인정보는 고시된 사항에 100% 부합되게 활용되며, 외부로 개인정보가 유출되는 일이 없습니다.
+                        </p>
+
+                        <div className="bg-white rounded-lg p-4 space-y-3">
+                            <div>
+                                <h4 className="font-semibold text-text-primary mb-1">📌 수집하는 개인정보 항목</h4>
+                                <p className="text-xs">이름, 휴대전화, IP, 상품의 소개 및 안내, 고지사항 전달, 본인 의사 확인</p>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold text-text-primary mb-1">📌 수집 및 이용목적</h4>
+                                <p className="text-xs">당사에 제공해주신 귀하의 정보는 서비스 제공을 위한 상담목적으로 이용됩니다.</p>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold text-text-primary mb-1">📌 개인정보의 수집범위</h4>
+                                <p className="text-xs">※ 위탁 처리: 당사는 개인정보취급방침에 의한 개인정보 취급 위탁은 하지 않고 있습니다.</p>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold text-text-primary mb-1">📌 동의 거부 권리</h4>
+                                <p className="text-xs">귀하는 개인정보 수집·이용에 대한 동의를 거부할 권리가 있습니다.<br/>
+                                ※ 단, 동의를 거부할 경우 회원가입/서비스 이용 등 구체적 불이익이 제한될 수 있습니다.</p>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold text-text-primary mb-1">📌 개인정보의 이용기간 및 보유기간</h4>
+                                <p className="text-xs">개인정보는 상담이 종료되는 즉시 파기됩니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {/* Action Buttons */}
                 {/* Actions */}
                 <motion.div
