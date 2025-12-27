@@ -104,7 +104,7 @@ export default function HomePage() {
                 <p className="text-xs text-text-secondary mb-3">
                   우리 집 인터넷 설치 가능 여부 확인
                 </p>
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-2 px-4 rounded-lg text-sm font-bold">
+                <div className="bg-primary text-white text-center py-2 px-4 rounded-lg text-sm font-semibold hover:bg-primary-dark transition">
                   확인하기 →
                 </div>
               </div>
@@ -127,7 +127,7 @@ export default function HomePage() {
                 <p className="text-xs text-text-secondary mb-3">
                   카드사별 추가 할인 혜택 확인
                 </p>
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-2 px-4 rounded-lg text-sm font-bold">
+                <div className="bg-primary text-white text-center py-2 px-4 rounded-lg text-sm font-semibold hover:bg-primary-dark transition">
                   확인하기 →
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default function HomePage() {
                 <p className="text-xs text-text-secondary mb-3">
                   SK BTV에서 시청 가능한 채널
                 </p>
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-2 px-4 rounded-lg text-sm font-bold">
+                <div className="bg-primary text-white text-center py-2 px-4 rounded-lg text-sm font-semibold hover:bg-primary-dark transition">
                   확인하기 →
                 </div>
               </div>
