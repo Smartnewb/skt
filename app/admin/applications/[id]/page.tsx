@@ -200,6 +200,10 @@ export default function ApplicationDetailPage() {
                                 <span className="text-sm text-gray-600">연락처</span>
                                 <CopyButton text={applicant?.contact?.phone || '-'} />
                             </div>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">통신사</span>
+                                <span className="text-sm font-medium">{applicant?.contact?.carrier || "-"}</span>
                             <div className="flex items-center justify-between py-2 border-b border-gray-100">
                                 <span className="text-sm text-gray-600">주소</span>
                                 <CopyButton
@@ -214,6 +218,7 @@ export default function ApplicationDetailPage() {
                     </motion.div>
 
                     {/* Product Info Card */}
+                    {/* Product Info Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -223,26 +228,55 @@ export default function ApplicationDetailPage() {
                         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                             📦 상품 정보
                         </h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="text-xs text-gray-600 mb-1">속도</div>
-                                <div className="text-lg font-bold text-gray-900">{product?.speed || '-'}</div>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">상품 유형</span>
+                                <span className="text-sm font-medium">
+                                    {product?.category === 'INTERNET_ONLY' ? '인터넷 단독' :
+                                     product?.category === 'INTERNET_PHONE' ? '인터넷 + 전화' :
+                                     product?.category === 'INTERNET_TV' ? '인터넷 + TV' : '-'}
+                                </span>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="text-xs text-gray-600 mb-1">월 요금</div>
-                                <div className="text-lg font-bold text-primary">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">할인 유형</span>
+                                <span className="text-sm font-medium">
+                                    {product?.discountType === 'MOBILE_COMBO' ? '📱 모바일 결합' :
+                                     product?.discountType === 'FAMILY_COMBO' ? '👨‍👩‍👧 가족 결합' : '일반 가입'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">인터넷 속도</span>
+                                <span className="text-sm font-medium">{product?.speed || '-'}</span>
+                            </div>
+                            {product?.tvType && (
+                                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                    <span className="text-sm text-gray-600">TV 패키지</span>
+                                    <span className="text-sm font-medium">{product.tvType}</span>
+                                </div>
+                            )}
+                            {product?.tvDevice && (
+                                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                    <span className="text-sm text-gray-600">TV 기기</span>
+                                    <span className="text-sm font-medium">{product.tvDevice}</span>
+                                </div>
+                            )}
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">WiFi 공유기</span>
+                                <span className={`text-sm font-medium ${product?.wifiRouter ? 'text-green-600' : 'text-gray-500'}`}>
+                                    {product?.wifiRouter ? '✓ 신청' : '미신청'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">월 요금</span>
+                                <span className="text-sm font-bold text-primary">
                                     {product?.monthlyPrice?.toLocaleString()}원
-                                </div>
+                                </span>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <div className="text-xs text-gray-600 mb-1">TV 상품</div>
-                                <div className="text-lg font-bold text-gray-900">{product?.tvType || '없음'}</div>
-                            </div>
-                            <div className="bg-primary/10 rounded-lg p-4">
-                                <div className="text-xs text-primary mb-1">사은품</div>
-                                <div className="text-lg font-bold text-primary">
+                            <div className="flex items-center justify-between py-2 bg-primary/10 -mx-6 px-6 rounded-b-lg">
+                                <span className="text-sm text-primary font-medium">사은품</span>
+                                <span className="text-lg font-bold text-primary">
                                     {product?.cashBenefit?.toLocaleString()}원
-                                </div>
+                                </span>
                             </div>
                         </div>
                     </motion.div>
