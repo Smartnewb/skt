@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { getApplications } from '@/lib/database';
 import { useAdminAuth, logout } from '@/lib/adminAuth';
 import { formatProductName } from '@/lib/productFormatter';
+import { formatProductCategory } from '@/lib/productCategoryFormatter';
 
 export default function AdminPage() {
     useAdminAuth(); // Protect this page
@@ -208,7 +209,7 @@ export default function AdminPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-text-primary">
-                                                    {formatProductName(app.product)}
+                                                    {formatProductCategory(app.product?.category)}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -262,7 +263,7 @@ export default function AdminPage() {
                             <div className="space-y-3 mb-4">
                                 <div className="flex justify-between items-center py-2">
                                     <span className="text-sm text-gray-600 font-medium">상품</span>
-                                    <span className="text-sm font-bold text-text-primary">{formatProductName(app.product)}</span>
+                                    <span className="text-sm font-bold text-text-primary">{formatProductCategory(app.product?.category)}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-2">
                                     <span className="text-sm text-gray-600 font-medium">월 요금</span>
