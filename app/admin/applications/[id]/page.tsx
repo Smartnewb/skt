@@ -8,7 +8,7 @@ import { ApplicationData } from '@/types/application';
 import { getBankName } from '@/lib/bankNames';
 import { formatAccountNumber } from '@/lib/bankFormats';
 import { CopyButton } from '@/components/admin/CopyButton';
-import { StatusDropdown, mapOldStatus, AdminStatus } from '@/components/admin/StatusDropdown';
+import { StatusDropdown, mapOldStatus, AdminStatus, STATUS_CONFIG } from '@/components/admin/StatusDropdown';
 import { TimelineMemo } from '@/components/admin/TimelineMemo';
 import { RiskAlerts } from '@/components/admin/RiskBadge';
 
