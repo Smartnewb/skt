@@ -10,12 +10,22 @@ export default function AdminPage() {
     const [applications, setApplications] = React.useState<(ApplicationData & { id: string })[]>([]);
     const [filter, setFilter] = React.useState<'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED'>('ALL');
 
-    React.useEffect(() => {
-        // Load applications from localStorage
-        const stored = localStorage.getItem('applications');
-        if (stored) {
-            setApplications(JSON.parse(stored));
+    const loadApplications = () => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('applications');
+            if (stored) {
+                try {
+                    const parsedApps = JSON.parse(stored);
+                    setApplications(parsedApps);
+                } catch (error) {
+                    console.error('Error parsing applications:', error);
+                }
+            }
         }
+    };
+
+    React.useEffect(() => {
+        loadApplications();
     }, []);
 
     const filteredApplications = React.useMemo(() => {
@@ -66,12 +76,20 @@ export default function AdminPage() {
                                 SKT 인터넷/BTV 가입 신청 관리
                             </p>
                         </div>
-                        <Link
-                            href="/"
-                            className="px-4 py-2 bg-gray-100 text-text-primary rounded-lg font-semibold text-sm hover:bg-gray-200 transition"
-                        >
-                            메인으로
-                        </Link>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={loadApplications}
+                                className="px-4 py-2 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary-dark transition"
+                            >
+                                🔄 새로고침
+                            </button>
+                            <Link
+                                href="/"
+                                className="px-4 py-2 bg-gray-100 text-text-primary rounded-lg font-semibold text-sm hover:bg-gray-200 transition"
+                            >
+                                메인으로
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -105,8 +123,8 @@ export default function AdminPage() {
                             key={status}
                             onClick={() => setFilter(status as typeof filter)}
                             className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${filter === status
-                                    ? 'bg-primary text-white'
-                                    : 'bg-white text-text-secondary hover:bg-gray-100 border border-border'
+                                ? 'bg-primary text-white'
+                                : 'bg-white text-text-secondary hover:bg-gray-100 border border-border'
                                 }`}
                         >
                             {status === 'ALL' && '전체'}

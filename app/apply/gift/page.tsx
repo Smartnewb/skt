@@ -21,6 +21,7 @@ const RELATIONSHIPS = [
 
 export default function GiftPage() {
     const router = useRouter();
+    const applicant = useApplicationStore((state) => state.applicant); // Get applicant info
     const giftRecipient = useApplicationStore((state) => state.giftRecipient);
     const setGiftRecipient = useApplicationStore((state) => state.setGiftRecipient);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
@@ -39,7 +40,19 @@ export default function GiftPage() {
     const [errors, setErrors] = React.useState<Record<string, string>>({});
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData({ ...formData, [field]: value });
+        // Auto-fill when SELF is selected
+        if (field === 'relationship' && value === 'SELF' && applicant) {
+            setFormData({
+                ...formData,
+                relationship: 'SELF',
+                name: applicant.name,
+                birthDateOrRegNumber: applicant.birthDate,
+                residentType: 'DOMESTIC',
+            });
+        } else {
+            setFormData({ ...formData, [field]: value });
+        }
+
         if (errors[field]) {
             setErrors({ ...errors, [field]: '' });
         }
@@ -102,8 +115,8 @@ export default function GiftPage() {
                                     key={rel.value}
                                     onClick={() => handleInputChange('relationship', rel.value)}
                                     className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${formData.relationship === rel.value
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                         }`}
                                     whileTap={{ scale: 0.97 }}
                                 >
@@ -127,8 +140,8 @@ export default function GiftPage() {
                                 <motion.button
                                     onClick={() => handleInputChange('residentType', 'DOMESTIC')}
                                     className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${formData.residentType === 'DOMESTIC'
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                         }`}
                                     whileTap={{ scale: 0.97 }}
                                 >
@@ -137,8 +150,8 @@ export default function GiftPage() {
                                 <motion.button
                                     onClick={() => handleInputChange('residentType', 'FOREIGN')}
                                     className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${formData.residentType === 'FOREIGN'
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                         }`}
                                     whileTap={{ scale: 0.97 }}
                                 >

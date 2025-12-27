@@ -12,6 +12,15 @@ export const validatePhoneNumber = (phone: string): boolean => {
     return numbers.length === 10 || numbers.length === 11;
 };
 
+// Birth date formatting (YYYY-MM-DD)
+export const formatBirthDate = (value: string): string => {
+    const numbers = value.replace(/[^\d]/g, '');
+
+    if (numbers.length <= 4) return numbers;
+    if (numbers.length <= 6) return `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+    return `${numbers.slice(0, 4)}-${numbers.slice(4, 6)}-${numbers.slice(6, 8)}`;
+};
+
 // Business registration number formatting
 export const formatBusinessNumber = (value: string): string => {
     const numbers = value.replace(/[^\d]/g, '');

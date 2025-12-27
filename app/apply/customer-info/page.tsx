@@ -13,6 +13,7 @@ import { CARRIERS } from '@/lib/mockData';
 import {
     formatPhoneNumber,
     formatBusinessNumber,
+    formatBirthDate,
     validatePhoneNumber,
     validateEmail,
     validateBirthDate,
@@ -73,6 +74,9 @@ export default function CustomerInfoPage() {
             });
         } else if (field === 'businessRegNumber') {
             value = formatBusinessNumber(value);
+            setFormData({ ...formData, [field]: value });
+        } else if (field === 'birthDate') {
+            value = formatBirthDate(value);
             setFormData({ ...formData, [field]: value });
         } else {
             setFormData({ ...formData, [field]: value });
