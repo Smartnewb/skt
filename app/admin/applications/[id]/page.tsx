@@ -252,12 +252,12 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                             } 
                         />
                         <InfoItem label="이름" value={applicant?.name} />
-                        <InfoItem label="생년월일" value={maskSensitiveData(applicant?.birthDate || '', 6)} />
+                        <InfoItem label="생년월일" value={applicant?.birthDate || ''} />
                         <InfoItem label="성별" value={applicant?.gender === 'MALE' ? '남성' : '여성'} />
                         {applicant?.businessName && (
                             <>
                                 <InfoItem label="사업자명" value={applicant.businessName} />
-                                <InfoItem label="사업자등록번호" value={maskSensitiveData(applicant.businessRegNumber || '', 5)} />
+                                <InfoItem label="사업자등록번호" value={applicant.businessRegNumber || ''} />
                             </>
                         )}
                         <InfoItem label="연락처" value={applicant?.contact.phone} />
@@ -281,13 +281,13 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                         {payment?.method === 'BANK_TRANSFER' && (
                             <>
                                 <InfoItem label="은행" value={payment?.bankCode ? getBankName(payment.bankCode) : undefined} />
-                                <InfoItem label="계좌번호" value={maskSensitiveData(payment.accountNumber || '', 4)} />
+                                <InfoItem label="계좌번호" value={payment.accountNumber || ''} />
                             </>
                         )}
                         {payment?.method === 'CARD' && (
                             <>
                                 <InfoItem label="카드사" value={payment.cardCompany} />
-                                <InfoItem label="카드번호" value={maskSensitiveData(payment.cardNumber || '', 4)} />
+                                <InfoItem label="카드번호" value={payment.cardNumber || ''} />
                             </>
                         )}
                     </div>
@@ -304,7 +304,7 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                     <div className="grid grid-cols-2 gap-4">
                         <InfoItem label="수령인" value={giftRecipient?.name} />
                         <InfoItem label="은행" value={giftRecipient?.bankCode} />
-                        <InfoItem label="계좌번호" value={maskSensitiveData(giftRecipient?.accountNumber || '', 4)} />
+                        <InfoItem label="계좌번호" value={giftRecipient?.accountNumber || ''} />
                         <InfoItem label="상품권 옵션" value={giftRecipient?.giftCardOption} />
                     </div>
                 </motion.div>
