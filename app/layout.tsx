@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SK브로드밴드 인터넷+BTV 간편 가입",
-  description: "토스처럼 쉬운 SK브로드밴드 인터넷과 BTV 가입 신청 서비스",
+  title: "퍼펙트PC통신 X SK브로드밴드 인터넷+BTV 간편 가입",
+  description: "토스처럼 쉬운 퍼펙트PC통신 X SK브로드밴드 인터넷과 BTV 가입 신청 서비스",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 

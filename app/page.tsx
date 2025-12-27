@@ -34,7 +34,7 @@ export default function HomePage() {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-3xl font-bold text-text-primary mb-2">
-            SK브로드밴드 인터넷 신청
+            퍼펙트PC통신 X SK브로드밴드 인터넷 신청
           </h1>
           <p className="text-lg text-text-secondary">
             어떤 상품이 필요하세요?
