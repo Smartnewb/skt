@@ -69,7 +69,7 @@ export default function ApplicationDetailPage() {
             const newMemo: MemoEntry = {
                 id: Date.now().toString(),
                 adminName: '시스템',
-                content: `상태가 "${mapOldStatus(application.status || 'PENDING')}"에서 "${newStatus}"로 변경되었습니다.`,
+                content: `상태가 "${STATUS_CONFIG[mapOldStatus(application.status || 'PENDING')]?.label || application.status}"에서 "${STATUS_CONFIG[newStatus]?.label || newStatus}"로 변경되었습니다.`,
                 isPinned: false,
                 logType: 'status_change',
                 createdAt: new Date().toISOString(),
