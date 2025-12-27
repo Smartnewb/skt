@@ -18,7 +18,7 @@ export default function SpeedSelectPage() {
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
 
     const [selectedSpeed, setSelectedSpeed] = React.useState<Speed | null>(null);
-    const [wifiRouter, setWifiRouter] = React.useState(false);
+    const [wifiRouter, setWifiRouter] = React.useState(true); // Default checked
 
     React.useEffect(() => {
         if (!selectedCategory || !selectedDiscountType) {

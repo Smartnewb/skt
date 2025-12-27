@@ -43,6 +43,17 @@ export default function PaymentPage() {
         }
     };
 
+    // Handle relationship change to autofill name for spouse
+    const handleRelationshipChange = (relationship: string) => {
+        handleInputChange('relationship', relationship);
+
+        // Auto-fill name for SPOUSE relationship
+        if (relationship === 'SPOUSE' && applicant) {
+            // For spouse, we can use a placeholder or leave empty for user to fill
+            // No auto-fill needed as we don't have spouse name in applicant data
+        }
+    };
+
     const handleSameAsApplicantChange = (checked: boolean) => {
         if (checked && applicant) {
             setFormData({
@@ -142,10 +153,10 @@ export default function PaymentPage() {
                             {RELATIONSHIPS.map((rel) => (
                                 <motion.button
                                     key={rel.value}
-                                    onClick={() => handleInputChange('relationship', rel.value)}
+                                    onClick={() => handleRelationshipChange(rel.value)}
                                     className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${formData.relationship === rel.value
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                         }`}
                                     whileTap={{ scale: 0.97 }}
                                     disabled={formData.isSameAsApplicant}
@@ -154,6 +165,13 @@ export default function PaymentPage() {
                                 </motion.button>
                             ))}
                         </div>
+                        {formData.relationship === 'SPOUSE' && (
+                            <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p className="text-xs text-blue-900">
+                                    💡 배우자 명의의 계좌를 입력해주세요
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Payment Method Selection */}
@@ -163,8 +181,8 @@ export default function PaymentPage() {
                             <motion.button
                                 onClick={() => handleInputChange('method', 'BANK_TRANSFER')}
                                 className={`py-4 px-4 rounded-xl font-semibold transition-all ${formData.method === 'BANK_TRANSFER'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                     }`}
                                 whileTap={{ scale: 0.97 }}
                             >
@@ -173,8 +191,8 @@ export default function PaymentPage() {
                             <motion.button
                                 onClick={() => handleInputChange('method', 'CARD')}
                                 className={`py-4 px-4 rounded-xl font-semibold transition-all ${formData.method === 'CARD'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                     }`}
                                 whileTap={{ scale: 0.97 }}
                             >
