@@ -202,7 +202,7 @@ export default function AdminPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm text-text-secondary">{app.applicant?.phone}</div>
+                                                <div className="text-sm text-text-secondary">{app.applicant?.phoneNumber}</div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-text-primary">
@@ -252,7 +252,7 @@ export default function AdminPage() {
                             <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100">
                                 <div className="flex-1">
                                     <h3 className="font-bold text-text-primary text-lg mb-1">{app.applicant?.name}</h3>
-                                    <p className="text-sm text-gray-600">{app.applicant?.phone}</p>
+                                    <p className="text-sm text-gray-600">{app.applicant?.phoneNumber}</p>
                                 </div>
                                 <span className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ml-2 ${app.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                                         app.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
