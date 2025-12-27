@@ -1,5 +1,6 @@
 // Bank code to Korean name mapping
 export const BANK_NAMES: Record<string, string> = {
+    // Numeric codes (금융결제원)
     '002': 'KDB산업은행',
     '003': 'IBK기업은행',
     '004': 'KB국민은행',
@@ -25,6 +26,17 @@ export const BANK_NAMES: Record<string, string> = {
     '089': '케이뱅크',
     '090': '카카오뱅크',
     '092': '토스뱅크',
+
+    // String codes (앱 내부 사용)
+    'KB': 'KB국민은행',
+    'SH': '신한은행',
+    'WR': '우리은행',
+    'HN': '하나은행',
+    'NH': 'NH농협은행',
+    'KK': '카카오뱅크',
+    'TOS': '토스뱅크',
+    'IBK': 'IBK기업은행',
+    'SC': 'SC제일은행',
 };
 
 export function getBankName(code: string): string {
