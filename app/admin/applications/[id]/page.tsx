@@ -116,7 +116,7 @@ export default function ApplicationDetailPage() {
 
         return {
             hasDuplicate: false, // TODO: Check from database
-            hasAccountMismatch: giftName && applicantName !== giftName,
+            hasAccountMismatch: Boolean(giftName && applicantName !== giftName),
             applicantName,
             accountHolderName: giftName,
         };
