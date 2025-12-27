@@ -169,7 +169,7 @@ export async function getApplication(id: string) {
 // Update application status
 export async function updateApplicationStatus(
     id: string,
-    status: 'PENDING' | 'PROCESSING' | 'COMPLETED'
+    status: string
 ) {
     const { data, error } = await supabase
         .from('applications')

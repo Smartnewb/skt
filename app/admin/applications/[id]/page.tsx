@@ -1,342 +1,366 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { getBankName } from '@/lib/bankNames';
-import { formatAccountNumber } from '@/lib/bankFormats';
-import { formatCurrency } from '@/lib/validation';
-import { ApplicationData } from '@/types/application';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { getApplication, updateApplicationStatus } from '@/lib/database';
-import { useAdminAuth } from '@/lib/adminAuth';
+import { ApplicationData } from '@/types/application';
+import { getBankName } from '@/lib/bankNames';
+import { formatAccountNumber } from '@/lib/bankFormats';
+import { CopyButton } from '@/components/admin/CopyButton';
+import { StatusDropdown, mapOldStatus, AdminStatus } from '@/components/admin/StatusDropdown';
+import { TimelineMemo } from '@/components/admin/TimelineMemo';
+import { RiskAlerts } from '@/components/admin/RiskBadge';
 
-function ApplicationDetailPageContent({ applicationId }: { applicationId: string }) {
-    useAdminAuth();
-    
+// Mock memos for now (will be replaced with Supabase)
+interface MemoEntry {
+    id: string;
+    adminName: string;
+    content: string;
+    isPinned: boolean;
+    callbackTime?: string;
+    logType: 'memo' | 'status_change' | 'callback' | 'system';
+    createdAt: string;
+}
+
+export default function ApplicationDetailPage() {
+    const params = useParams();
     const router = useRouter();
-    const [application, setApplication] = React.useState<(ApplicationData & { id: string }) | null>(null);
-    const [status, setStatus] = React.useState<'PENDING' | 'PROCESSING' | 'COMPLETED'>('PENDING');
+    const applicationId = params?.id as string;
+
+    const [application, setApplication] = React.useState<ApplicationData | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
-    const [isUpdating, setIsUpdating] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [debugInfo, setDebugInfo] = React.useState<any>(null);
+    const [memos, setMemos] = React.useState<MemoEntry[]>([]);
+    const [isSaving, setIsSaving] = React.useState(false);
 
     React.useEffect(() => {
-        const loadApplication = async () => {
-            setIsLoading(true);
-            setError(null);
-            console.log('Loading application with ID:', applicationId);
-            
-            try {
-                const app = await getApplication(applicationId);
-                console.log('Successfully loaded application:', app);
-                setApplication(app);
-                setStatus(app.status || 'PENDING');
-            } catch (error: any) {
-                console.error('Error loading from Supabase:', error);
-                setDebugInfo({
-                    error: error.message,
-                    stack: error.stack,
-                    id: applicationId
-                });
-                
-                // Fallback to localStorage
-                const stored = localStorage.getItem('applications');
-                console.log('Trying localStorage fallback...');
-                
-                if (stored) {
-                    const apps = JSON.parse(stored);
-                    console.log('Found apps in localStorage:', apps.length);
-                    const app = apps.find((a: any) => a.id === applicationId);
-                    if (app) {
-                        console.log('Found app in localStorage:', app);
-                        setApplication(app);
-                        setStatus(app.status);
-                    } else {
-                        console.error('App not found in localStorage with ID:', applicationId);
-                        setError('신청서를 찾을 수 없습니다 (로컬에서도 없음)');
-                    }
-                } else {
-                    console.error('No localStorage data found');
-                    setError('신청서를 찾을 수 없습니다 (Supabase 및 로컬 모두 없음)');
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        
-        loadApplication();
+        if (applicationId) {
+            loadApplication();
+        }
     }, [applicationId]);
 
-    const handleStatusChange = async (newStatus: typeof status) => {
-        setIsUpdating(true);
+    const loadApplication = async () => {
+        setIsLoading(true);
         try {
-            const updatedApp = await updateApplicationStatus(applicationId, newStatus);
-            setStatus(newStatus);
-            setApplication(updatedApp);
-            
-            const stored = localStorage.getItem('applications');
-            if (stored) {
-                const apps = JSON.parse(stored);
-                const updatedApps = apps.map((a: any) =>
-                    a.id === applicationId ? { ...a, status: newStatus } : a
-                );
-                localStorage.setItem('applications', JSON.stringify(updatedApps));
+            const data = await getApplication(applicationId);
+            setApplication(data);
+
+            // Load memos from localStorage for now
+            const storedMemos = localStorage.getItem(`memos_${applicationId}`);
+            if (storedMemos) {
+                setMemos(JSON.parse(storedMemos));
             }
         } catch (error) {
-            console.error('Error updating status:', error);
-            alert('상태 업데이트 중 오류가 발생했습니다.');
+            console.error('Error loading application:', error);
         } finally {
-            setIsUpdating(false);
+            setIsLoading(false);
         }
     };
 
-    const maskSensitiveData = (data: string, visibleChars: number = 4) => {
-        if (!data) return '';
-        return data.slice(0, visibleChars) + '*'.repeat(Math.max(0, data.length - visibleChars));
+    const handleStatusChange = async (newStatus: AdminStatus) => {
+        if (!application) return;
+
+        setIsSaving(true);
+        try {
+            await updateApplicationStatus(applicationId, newStatus);
+            setApplication({ ...application, status: newStatus as any });
+
+            // Add system memo for status change
+            const newMemo: MemoEntry = {
+                id: Date.now().toString(),
+                adminName: '시스템',
+                content: `상태가 "${mapOldStatus(application.status || 'PENDING')}"에서 "${newStatus}"로 변경되었습니다.`,
+                isPinned: false,
+                logType: 'status_change',
+                createdAt: new Date().toISOString(),
+            };
+            const updatedMemos = [...memos, newMemo];
+            setMemos(updatedMemos);
+            localStorage.setItem(`memos_${applicationId}`, JSON.stringify(updatedMemos));
+        } catch (error) {
+            console.error('Error updating status:', error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
-    // Loading state
+    const handleAddMemo = (content: string, callbackTime?: string) => {
+        const newMemo: MemoEntry = {
+            id: Date.now().toString(),
+            adminName: '관리자',
+            content,
+            isPinned: false,
+            callbackTime,
+            logType: callbackTime ? 'callback' : 'memo',
+            createdAt: new Date().toISOString(),
+        };
+        const updatedMemos = [...memos, newMemo];
+        setMemos(updatedMemos);
+        localStorage.setItem(`memos_${applicationId}`, JSON.stringify(updatedMemos));
+    };
+
+    const handlePinMemo = (id: string, isPinned: boolean) => {
+        const updatedMemos = memos.map(m =>
+            m.id === id ? { ...m, isPinned } : m
+        );
+        setMemos(updatedMemos);
+        localStorage.setItem(`memos_${applicationId}`, JSON.stringify(updatedMemos));
+    };
+
+    // Risk check
+    const riskCheck = React.useMemo(() => {
+        if (!application) return { hasDuplicate: false, hasAccountMismatch: false };
+
+        const applicantName = application.applicant?.name || '';
+        const giftName = application.giftRecipient?.name || '';
+
+        return {
+            hasDuplicate: false, // TODO: Check from database
+            hasAccountMismatch: giftName && applicantName !== giftName,
+            applicantName,
+            accountHolderName: giftName,
+        };
+    }, [application]);
+
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-text-secondary">신청서를 불러오는 중...</p>
-                    <p className="text-xs text-text-secondary mt-2">ID: {applicationId}</p>
-                </div>
+            <div className="min-h-screen p-6 flex items-center justify-center">
+                <div className="text-gray-500">로딩 중...</div>
             </div>
         );
     }
 
-    // Error state
-    if (error || !application) {
+    if (!application) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-                <div className="text-center max-w-2xl">
-                    <div className="text-6xl mb-4">❌</div>
-                    <h2 className="text-xl font-bold text-text-primary mb-2">
-                        {error || '신청서를 찾을 수 없습니다'}
-                    </h2>
-                    <p className="text-text-secondary mb-6">
-                        신청서가 존재하지 않거나 데이터베이스 연결에 문제가 있을 수 있습니다.
-                    </p>
-                    
-                    {debugInfo && (
-                        <details className="text-left bg-gray-100 rounded-lg p-4 mb-4">
-                            <summary className="cursor-pointer font-semibold">🔍 디버그 정보</summary>
-                            <pre className="text-xs mt-2 overflow-auto">
-                                {JSON.stringify(debugInfo, null, 2)}
-                            </pre>
-                        </details>
-                    )}
-                    
-                    <div className="flex gap-3 justify-center">
-                        <button
-                            onClick={() => router.push('/admin')}
-                            className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition"
-                        >
-                            목록으로 돌아가기
-                        </button>
-                        <button
-                            onClick={() => router.push('/admin/test-supabase')}
-                            className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition"
-                        >
-                            연결 테스트
-                        </button>
-                    </div>
-                </div>
+            <div className="min-h-screen p-6 flex items-center justify-center">
+                <div className="text-gray-500">신청 정보를 찾을 수 없습니다.</div>
             </div>
         );
     }
 
-    const { product, applicant, payment, giftRecipient, customerRequest } = application;
+    const { applicant, product, payment, giftRecipient, customerRequest } = application;
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
+        <div className="min-h-screen bg-gray-100">
             {/* Header */}
-            <div className="bg-white border-b border-border">
-                <div className="max-w-4xl mx-auto px-6 py-6">
-                    <button
-                        onClick={() => router.back()}
-                        className="text-sm text-text-secondary mb-4 hover:text-primary"
-                    >
-                        ← 목록으로
-                    </button>
-                    <h1 className="text-3xl font-bold text-text-primary">신청서 상세</h1>
-                    <p className="text-xs text-text-secondary mt-1">ID: {applicationId}</p>
+            <div className="bg-white border-b border-gray-200 px-6 py-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.back()}
+                            className="text-gray-600 hover:text-gray-900"
+                        >
+                            ← 목록으로
+                        </button>
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900">
+                                {applicant?.name} 님의 신청서
+                            </h1>
+                            <p className="text-sm text-gray-600">
+                                {application.submittedAt
+                                    ? new Date(application.submittedAt).toLocaleString('ko-KR')
+                                    : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <StatusDropdown
+                        currentStatus={mapOldStatus(application.status || 'PENDING')}
+                        onChange={handleStatusChange}
+                        disabled={isSaving}
+                    />
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-                {/* Status Control */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-xl p-6 border border-border"
-                >
-                    <h2 className="text-lg font-bold text-text-primary mb-4">상태 관리</h2>
-                    <div className="flex gap-3">
-                        {(['PENDING', 'PROCESSING', 'COMPLETED'] as const).map((s) => (
-                            <button
-                                key={s}
-                                onClick={() => handleStatusChange(s)}
-                                disabled={isUpdating}
-                                className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${
-                                    status === s
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
-                                } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                {s === 'PENDING' && '접수 대기'}
-                                {s === 'PROCESSING' && '처리중'}
-                                {s === 'COMPLETED' && '완료'}
-                            </button>
-                        ))}
-                    </div>
-                </motion.div>
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+                {/* Left Panel - Customer Info & Actions */}
+                <div className="space-y-6">
+                    {/* Risk Alerts */}
+                    <RiskAlerts result={riskCheck} />
 
-                {/* Product Info */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="bg-white rounded-xl p-6 border border-border"
-                >
-                    <h2 className="text-lg font-bold text-text-primary mb-4">선택 상품</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InfoItem 
-                            label="카테고리" 
-                            value={
-                                product?.category === 'INTERNET_ONLY' ? '인터넷 단독' :
-                                product?.category === 'INTERNET_PHONE' ? '인터넷+집전화' :
-                                product?.category === 'INTERNET_TV' ? '인터넷+BTV' : '-'
-                            } 
-                        />
-                        <InfoItem 
-                            label="할인 유형" 
-                            value={
-                                product?.discountType === 'MOBILE_COMBO' ? '휴대폰 결합 ⭐' :
-                                product?.discountType === 'FAMILY_COMBO' ? '패밀리 결합' :
-                                product?.discountType === 'GENERAL' ? '일반상품' : '-'
-                            } 
-                        />
-                        <InfoItem label="속도" value={product?.speed} />
-                        {product?.tvType && <InfoItem label="TV 타입" value={product.tvType} />}
-                        <InfoItem label="월 요금" value={product?.monthlyPrice ? formatCurrency(product.monthlyPrice) : undefined} />
-                        <InfoItem label="사은품" value={product?.cashBenefit ? formatCurrency(product.cashBenefit) : undefined} />
-                        {product?.wifiRouter && (
-                            <div className="col-span-2 bg-blue-50 rounded-lg p-3">
-                                <p className="text-sm font-semibold text-blue-900">
-                                    📡 WiFi 공유기 포함 (+1,100원/월)
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </motion.div>
-
-                {/* Applicant Info */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="bg-white rounded-xl p-6 border border-border"
-                >
-                    <h2 className="text-lg font-bold text-text-primary mb-4">가입자 정보</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InfoItem 
-                            label="고객 구분" 
-                            value={
-                                applicant?.customerType === 'PERSONAL' ? '개인' :
-                                applicant?.customerType === 'INDIVIDUAL_BIZ' ? '개인사업자' :
-                                applicant?.customerType === 'CORPORATE' ? '법인' : '외국인'
-                            } 
-                        />
-                        <InfoItem label="이름" value={applicant?.name} />
-                        <InfoItem label="생년월일" value={applicant?.birthDate || ''} />
-                        <InfoItem label="성별" value={applicant?.gender === 'MALE' ? '남성' : '여성'} />
-                        {applicant?.businessName && (
-                            <>
-                                <InfoItem label="사업자명" value={applicant.businessName} />
-                                <InfoItem label="사업자등록번호" value={applicant.businessRegNumber || ''} />
-                            </>
-                        )}
-                        <InfoItem label="연락처" value={applicant?.contact.phone} />
-                        <InfoItem label="이메일" value={applicant?.email} />
-                        <div className="col-span-2">
-                            <InfoItem label="설치 주소" value={`${applicant?.address.basic} ${applicant?.address.detail}`} />
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Payment Info */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-white rounded-xl p-6 border border-border"
-                >
-                    <h2 className="text-lg font-bold text-text-primary mb-4">납부 정보</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InfoItem label="납부 방식" value={payment?.method === 'BANK_TRANSFER' ? '은행 자동이체' : '카드 결제'} />
-                        {payment?.method === 'BANK_TRANSFER' && (
-                            <>
-                                <InfoItem label="은행" value={payment?.bankCode ? getBankName(payment.bankCode) : undefined} />
-                                <InfoItem label="계좌번호" value={payment?.bankCode && payment?.accountNumber ? formatAccountNumber(payment.bankCode, payment.accountNumber) : payment?.accountNumber || ''} />
-                            </>
-                        )}
-                        {payment?.method === 'CARD' && (
-                            <>
-                                <InfoItem label="카드사" value={payment.cardCompany} />
-                                <InfoItem label="카드번호" value={payment.cardNumber || ''} />
-                            </>
-                        )}
-                    </div>
-                </motion.div>
-
-                {/* Gift Recipient Info */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-white rounded-xl p-6 border border-border"
-                >
-                    <h2 className="text-lg font-bold text-text-primary mb-4">사은품 수령 정보</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InfoItem label="수령인" value={giftRecipient?.name} />
-                        <InfoItem label="은행" value={giftRecipient?.bankCode ? getBankName(giftRecipient.bankCode) : undefined} />
-                        <InfoItem label="계좌번호" value={giftRecipient?.bankCode && giftRecipient?.accountNumber ? formatAccountNumber(giftRecipient.bankCode, giftRecipient.accountNumber) : giftRecipient?.accountNumber || ''} />
-                        <InfoItem label="상품권 옵션" value={giftRecipient?.giftCardOption} />
-                    </div>
-                </motion.div>
-
-                {/* Customer Request */}
-                {customerRequest && (
+                    {/* Customer Info Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="bg-white rounded-xl p-6 border border-border"
+                        className="bg-white rounded-lg p-6 border border-gray-200"
                     >
-                        <h2 className="text-lg font-bold text-text-primary mb-4">고객 요청사항</h2>
-                        <p className="text-text-primary whitespace-pre-wrap">{customerRequest}</p>
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            👤 가입자 정보
+                        </h2>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">이름</span>
+                                <CopyButton text={applicant?.name || '-'} />
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">생년월일</span>
+                                <CopyButton text={applicant?.birthDate || '-'} />
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">연락처</span>
+                                <CopyButton text={applicant?.contact?.phone || '-'} />
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">주소</span>
+                                <CopyButton
+                                    text={`${applicant?.address?.basic || ''} ${applicant?.address?.detail || ''}`}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                                <span className="text-sm text-gray-600">이메일</span>
+                                <span className="text-sm">{applicant?.email || '-'}</span>
+                            </div>
+                        </div>
                     </motion.div>
-                )}
+
+                    {/* Product Info Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-white rounded-lg p-6 border border-gray-200"
+                    >
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            📦 상품 정보
+                        </h2>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <div className="text-xs text-gray-600 mb-1">속도</div>
+                                <div className="text-lg font-bold text-gray-900">{product?.speed || '-'}</div>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <div className="text-xs text-gray-600 mb-1">월 요금</div>
+                                <div className="text-lg font-bold text-primary">
+                                    {product?.monthlyPrice?.toLocaleString()}원
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <div className="text-xs text-gray-600 mb-1">TV 상품</div>
+                                <div className="text-lg font-bold text-gray-900">{product?.tvType || '없음'}</div>
+                            </div>
+                            <div className="bg-primary/10 rounded-lg p-4">
+                                <div className="text-xs text-primary mb-1">사은품</div>
+                                <div className="text-lg font-bold text-primary">
+                                    {product?.cashBenefit?.toLocaleString()}원
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Payment Info Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-white rounded-lg p-6 border border-gray-200"
+                    >
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            💳 납부 정보
+                        </h2>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">납부 방법</span>
+                                <span className="text-sm font-medium">
+                                    {payment?.method === 'BANK_TRANSFER' ? '계좌이체' : '카드결제'}
+                                </span>
+                            </div>
+                            {payment?.method === 'BANK_TRANSFER' && (
+                                <>
+                                    <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                        <span className="text-sm text-gray-600">은행</span>
+                                        <span className="text-sm font-medium">
+                                            {payment?.bankCode ? getBankName(payment.bankCode) : '-'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-2">
+                                        <span className="text-sm text-gray-600">계좌번호</span>
+                                        <CopyButton
+                                            text={payment?.bankCode && payment?.accountNumber
+                                                ? formatAccountNumber(payment.bankCode, payment.accountNumber)
+                                                : payment?.accountNumber || '-'}
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </motion.div>
+
+                    {/* Gift Recipient Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-white rounded-lg p-6 border border-gray-200"
+                    >
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            🎁 사은품 수령 정보
+                        </h2>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">수령인</span>
+                                <CopyButton text={giftRecipient?.name || '-'} />
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">은행</span>
+                                <span className="text-sm font-medium">
+                                    {giftRecipient?.bankCode ? getBankName(giftRecipient.bankCode) : '-'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-600">계좌번호</span>
+                                <CopyButton
+                                    text={giftRecipient?.bankCode && giftRecipient?.accountNumber
+                                        ? formatAccountNumber(giftRecipient.bankCode, giftRecipient.accountNumber)
+                                        : giftRecipient?.accountNumber || '-'}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                                <span className="text-sm text-gray-600">상품권</span>
+                                <span className="text-sm font-medium">{giftRecipient?.giftCardOption || '전액 현금'}</span>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Customer Request */}
+                    {customerRequest && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="bg-white rounded-lg p-6 border border-gray-200"
+                        >
+                            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                📝 고객 요청사항
+                            </h2>
+                            <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-4">
+                                {customerRequest}
+                            </p>
+                        </motion.div>
+                    )}
+                </div>
+
+                {/* Right Panel - Workflow & Timeline */}
+                <div className="lg:sticky lg:top-6 h-fit">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-white rounded-lg border border-gray-200 h-[calc(100vh-200px)] flex flex-col"
+                    >
+                        <div className="p-4 border-b border-gray-200">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                💬 상담 기록
+                            </h2>
+                            <p className="text-xs text-gray-500">메모와 콜백 예약을 관리합니다.</p>
+                        </div>
+                        <TimelineMemo
+                            memos={memos}
+                            onAddMemo={handleAddMemo}
+                            onPinMemo={handlePinMemo}
+                        />
+                    </motion.div>
+                </div>
             </div>
         </div>
     );
-}
-
-function InfoItem({ label, value }: { label: string; value?: string }) {
-    return (
-        <div>
-            <p className="text-sm text-text-secondary mb-1">{label}</p>
-            <p className="font-semibold text-text-primary">{value || '-'}</p>
-        </div>
-    );
-}
-
-export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    return <ApplicationDetailPageContent applicationId={id} />;
 }
