@@ -13,16 +13,28 @@ import { motion } from 'framer-motion';
 export default function HomePage() {
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = React.useState<ProductInfo | null>(null);
+  const [wifiRouter, setWifiRouter] = React.useState(false);
   const setProduct = useApplicationStore((state) => state.setProduct);
   const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
 
+  const WIFI_ROUTER_PRICE = 1100;
+
   const handleNext = () => {
     if (selectedProduct) {
-      setProduct(selectedProduct);
+      const productWithWifi = {
+        ...selectedProduct,
+        wifiRouter,
+        monthlyPrice: selectedProduct.monthlyPrice + (wifiRouter ? WIFI_ROUTER_PRICE : 0),
+      };
+      setProduct(productWithWifi);
       setCurrentStep(1);
       router.push('/apply/customer-info');
     }
   };
+
+  const totalPrice = selectedProduct
+    ? selectedProduct.monthlyPrice + (wifiRouter ? WIFI_ROUTER_PRICE : 0)
+    : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-32">
@@ -96,6 +108,46 @@ export default function HomePage() {
         ))}
       </div>
 
+      {/* WiFi Router Option */}
+      {selectedProduct && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-6 mt-6"
+        >
+          <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="wifi-router"
+                  checked={wifiRouter}
+                  onChange={(e) => setWifiRouter(e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                />
+                <label htmlFor="wifi-router" className="cursor-pointer">
+                  <div className="font-semibold text-text-primary">
+                    📡 WiFi 공유기 포함
+                  </div>
+                  <div className="text-xs text-text-secondary mt-0.5">
+                    월 {formatCurrency(WIFI_ROUTER_PRICE)} 추가
+                  </div>
+                </label>
+              </div>
+              {wifiRouter && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="text-primary font-bold"
+                >
+                  +{formatCurrency(WIFI_ROUTER_PRICE)}
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Footer Note */}
       <div className="px-6 mt-6">
         <p className="text-xs text-text-secondary text-center">
@@ -112,7 +164,7 @@ export default function HomePage() {
           transition={{ duration: 0.3 }}
         >
           <Button onClick={handleNext}>
-            다음 ({formatCurrency(selectedProduct.monthlyPrice)})
+            다음 ({formatCurrency(totalPrice)})
           </Button>
         </motion.div>
       )}

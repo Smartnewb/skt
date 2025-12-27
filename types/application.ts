@@ -16,6 +16,7 @@ export interface ProductInfo {
   cashBenefit: number;
   isBest: boolean;
   description: string;
+  wifiRouter?: boolean; // WiFi 공유기 포함 여부
 }
 
 export interface ContactInfo {
