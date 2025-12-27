@@ -126,7 +126,8 @@ export const SPEED_INFO = {
     '100M': {
         name: '100M',
         subtitle: '광랜',
-        description: '1~2인 가구, 가벼운 인터넷 사용'
+        description: '1~2인 가구, 가벼운 인터넷 사용',
+        popular: false
     },
     '500M': {
         name: '500M',
@@ -137,7 +138,8 @@ export const SPEED_INFO = {
     '1G': {
         name: '1G',
         subtitle: '기가',
-        description: '대가족, 게임 + 고화질 스트리밍'
+        description: '대가족, 게임 + 고화질 스트리밍',
+        popular: false
     }
 };
 

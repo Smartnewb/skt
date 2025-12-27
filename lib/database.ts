@@ -60,8 +60,10 @@ export function transformDbToApplication(dbRecord: any): ApplicationData & { id:
         id: dbRecord.id,
         product: {
             id: dbRecord.product_id,
+            category: dbRecord.product_category || 'INTERNET_TV', // Backward compatibility
             speed: dbRecord.product_speed,
             tvType: dbRecord.product_tv_type,
+            discountType: dbRecord.product_discount_type || 'MOBILE_COMBO', // Backward compatibility
             monthlyPrice: dbRecord.product_monthly_price,
             cashBenefit: dbRecord.product_cash_benefit,
             isBest: false,
