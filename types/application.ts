@@ -8,15 +8,39 @@ export type Relationship = 'SELF' | 'SPOUSE' | 'FAMILY' | 'OTHER';
 
 export type ResidentType = 'DOMESTIC' | 'FOREIGN';
 
+// Product category types
+export type ProductCategory = 'INTERNET_ONLY' | 'INTERNET_PHONE' | 'INTERNET_TV';
+export type Speed = '100M' | '500M' | '1G';
+export type DiscountType = 'GENERAL' | 'MOBILE_COMBO' | 'FAMILY_COMBO';
+
 export interface ProductInfo {
   id: string;
-  speed: string;
-  tvType: string;
-  monthlyPrice: number;
+  category: ProductCategory;
+  speed: Speed;
+  tvType?: string; // Only for INTERNET_TV
+  discountType: DiscountType;
+
+  // Pricing
+  monthlyPrice: number; // Final calculated price
   cashBenefit: number;
+
+  // Metadata
   isBest: boolean;
   description: string;
-  wifiRouter?: boolean; // WiFi 공유기 포함 여부
+  wifiRouter?: boolean;
+}
+
+// Price table structure for database
+export interface PriceTable {
+  category: ProductCategory;
+  speed: Speed;
+  tvType?: string;
+  cashBenefit: number;
+  prices: {
+    general: number;
+    mobileCombo: number;
+    familyCombo: number;
+  };
 }
 
 export interface ContactInfo {

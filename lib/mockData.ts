@@ -1,34 +1,7 @@
 import { ProductInfo } from '@/types/application';
 
-export const PRODUCTS: ProductInfo[] = [
-    {
-        id: 'prod_500m',
-        speed: '500M',
-        tvType: 'Btv 스탠다드',
-        monthlyPrice: 38500,
-        cashBenefit: 480000,
-        isBest: true,
-        description: '가장 많이 선택하는 베스트 상품',
-    },
-    {
-        id: 'prod_1g',
-        speed: '1G',
-        tvType: 'Btv 스탠다드',
-        monthlyPrice: 41800,
-        cashBenefit: 480000,
-        isBest: false,
-        description: '빠른 속도가 필요한 분들을 위해',
-    },
-    {
-        id: 'prod_100m',
-        speed: '100M',
-        tvType: 'Btv 스탠다드',
-        monthlyPrice: 34100,
-        cashBenefit: 430000,
-        isBest: false,
-        description: '유튜브, 웹서핑 위주라면 충분해요',
-    },
-];
+// Re-export from productPricing for backward compatibility
+export { PRODUCTS, CATEGORY_INFO, SPEED_INFO, calculateProduct, getProductsByCondition } from './productPricing';
 
 export const BANKS = [
     { code: 'KB', name: 'KB국민은행' },

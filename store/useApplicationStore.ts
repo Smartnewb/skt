@@ -1,10 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ApplicationData } from '@/types/application';
+import { ApplicationData, ProductCategory, DiscountType } from '@/types/application';
 
 interface ApplicationStore extends ApplicationData {
+    // Product selection state
+    selectedCategory?: ProductCategory;
+    selectedDiscountType?: DiscountType;
+
     currentStep: number;
     setCurrentStep: (step: number) => void;
+
+    // New setters for category and discount
+    setCategory: (category: ProductCategory) => void;
+    setDiscountType: (discountType: DiscountType) => void;
+
     setProduct: (product: ApplicationData['product']) => void;
     setApplicant: (applicant: ApplicationData['applicant']) => void;
     setPayment: (payment: ApplicationData['payment']) => void;
@@ -20,6 +29,8 @@ export const useApplicationStore = create<ApplicationStore>()(
         (set, get) => ({
             // Initial state
             currentStep: 0,
+            selectedCategory: undefined,
+            selectedDiscountType: undefined,
             product: undefined,
             applicant: undefined,
             payment: undefined,
@@ -31,6 +42,10 @@ export const useApplicationStore = create<ApplicationStore>()(
 
             // Actions
             setCurrentStep: (step) => set({ currentStep: step }),
+
+            setCategory: (selectedCategory) => set({ selectedCategory }),
+
+            setDiscountType: (selectedDiscountType) => set({ selectedDiscountType }),
 
             setProduct: (product) => set({ product }),
 
@@ -70,6 +85,8 @@ export const useApplicationStore = create<ApplicationStore>()(
 
             reset: () => set({
                 currentStep: 0,
+                selectedCategory: undefined,
+                selectedDiscountType: undefined,
                 product: undefined,
                 applicant: undefined,
                 payment: undefined,
