@@ -90,7 +90,7 @@ export default function AdminPage() {
                         <div>
                             <h1 className="text-3xl font-bold text-text-primary">관리자 대시보드</h1>
                             <p className="text-sm text-text-secondary mt-1">
-                                SKT 인터넷/BTV 가입 신청 관리
+                                SK브로드밴드 인터넷/BTV 가입 신청 관리
                             </p>
                         </div>
                         <div className="flex gap-2">

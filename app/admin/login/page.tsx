@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
                             관리자 로그인
                         </h1>
                         <p className="text-sm text-text-secondary">
-                            SKT 신청 관리 시스템
+                            SK브로드밴드 신청 관리 시스템
                         </p>
                     </div>
 
