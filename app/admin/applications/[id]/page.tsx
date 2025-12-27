@@ -14,17 +14,21 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     const router = useRouter();
     const [application, setApplication] = React.useState<(ApplicationData & { id: string }) | null>(null);
     const [status, setStatus] = React.useState<'PENDING' | 'PROCESSING' | 'COMPLETED'>('PENDING');
-    const [isLoading, setIsLoading] = React.useState(false);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [isUpdating, setIsUpdating] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         const loadApplication = async () => {
+            setIsLoading(true);
+            setError(null);
             try {
                 const app = await getApplication(params.id);
                 setApplication(app);
                 setStatus(app.status || 'PENDING');
             } catch (error) {
                 console.error('Error loading from Supabase:', error);
-
+                
                 const stored = localStorage.getItem('applications');
                 if (stored) {
                     const apps = JSON.parse(stored);
@@ -32,21 +36,27 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                     if (app) {
                         setApplication(app);
                         setStatus(app.status);
+                    } else {
+                        setError('신청서를 찾을 수 없습니다.');
                     }
+                } else {
+                    setError('신청서를 찾을 수 없습니다.');
                 }
+            } finally {
+                setIsLoading(false);
             }
         };
-
+        
         loadApplication();
     }, [params.id]);
 
     const handleStatusChange = async (newStatus: typeof status) => {
-        setIsLoading(true);
+        setIsUpdating(true);
         try {
             const updatedApp = await updateApplicationStatus(params.id, newStatus);
             setStatus(newStatus);
             setApplication(updatedApp);
-
+            
             const stored = localStorage.getItem('applications');
             if (stored) {
                 const apps = JSON.parse(stored);
@@ -59,7 +69,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
             console.error('Error updating status:', error);
             alert('상태 업데이트 중 오류가 발생했습니다.');
         } finally {
-            setIsLoading(false);
+            setIsUpdating(false);
         }
     };
 
@@ -68,10 +78,37 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         return data.slice(0, visibleChars) + '*'.repeat(Math.max(0, data.length - visibleChars));
     };
 
-    if (!application) {
+    // Loading state
+    if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-text-secondary">로딩 중...</p>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-text-secondary">신청서를 불러오는 중...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (error || !application) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-6xl mb-4">❌</div>
+                    <h2 className="text-xl font-bold text-text-primary mb-2">
+                        {error || '신청서를 찾을 수 없습니다'}
+                    </h2>
+                    <p className="text-text-secondary mb-6">
+                        신청서가 존재하지 않거나 삭제되었을 수 있습니다.
+                    </p>
+                    <button
+                        onClick={() => router.push('/admin')}
+                        className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition"
+                    >
+                        목록으로 돌아가기
+                    </button>
+                </div>
             </div>
         );
     }
