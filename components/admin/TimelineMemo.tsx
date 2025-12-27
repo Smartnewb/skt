@@ -70,7 +70,7 @@ export function TimelineMemo({ memos, onAddMemo, onPinMemo, isLoading }: Timelin
                 <div className="bg-yellow-50 border-b border-yellow-200 p-3">
                     <div className="text-xs text-yellow-800 font-semibold mb-2">📌 고정된 메모</div>
                     {pinnedMemos.map((memo) => (
-                        <div key={memo.id} className="group flex items-start justify-between mb-2 last:mb-0">
+                        <div key={memo.id} className="flex items-start justify-between mb-2 last:mb-0">
                             <div className="text-sm text-yellow-900 flex-1">{memo.content}</div>
                             {onPinMemo && (
                                 <button
@@ -108,24 +108,24 @@ export function TimelineMemo({ memos, onAddMemo, onPinMemo, isLoading }: Timelin
                                 <span className="text-lg">{getLogIcon(memo.logType)}</span>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                                className="opacity-0 group-hover:opacity-100 px-2 py-1 text-xs rounded hover:bg-yellow-50 transition"
+                                        <span className="text-xs font-semibold text-gray-700">
                                             {memo.adminName}
-                                                {memo.isPinned ? "📍 고정됨" : "📌 고정"}
+                                        </span>
                                         <span className="text-xs text-gray-400">
                                             {formatTime(memo.createdAt)}
                                         </span>
-                                        {onPinMemo && (
+                                        {onPinMemo && memo.logType === 'memo' && (
                                             <button
                                                 onClick={() => onPinMemo(memo.id, !memo.isPinned)}
-                                                className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-yellow-600 transition"
+                                                className="opacity-0 group-hover:opacity-100 text-xs hover:text-yellow-600 transition"
                                             >
                                                 📌
                                             </button>
                                         )}
                                     </div>
                                     <div className={`p-3 rounded-lg text-sm ${memo.logType === 'system'
-                                            ? 'bg-gray-100 text-gray-600 italic'
-                                            : 'bg-blue-50 text-gray-800'
+                                        ? 'bg-gray-100 text-gray-600 italic'
+                                        : 'bg-blue-50 text-gray-800'
                                         }`}>
                                         {memo.content}
                                         {memo.callbackTime && (
@@ -164,8 +164,8 @@ export function TimelineMemo({ memos, onAddMemo, onPinMemo, isLoading }: Timelin
                         type="button"
                         onClick={() => setShowCallbackPicker(!showCallbackPicker)}
                         className={`px-3 py-2 rounded-lg text-sm transition ${showCallbackPicker
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                             }`}
                         title="콜백 예약"
                     >
