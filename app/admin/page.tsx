@@ -6,8 +6,11 @@ import { formatCurrency } from '@/lib/validation';
 import { ApplicationData } from '@/types/application';
 import { motion } from 'framer-motion';
 import { getApplications } from '@/lib/database';
+import { useAdminAuth, logout } from '@/lib/adminAuth';
 
 export default function AdminPage() {
+    useAdminAuth(); // Protect this page
+
     const [applications, setApplications] = React.useState<(ApplicationData & { id: string })[]>([]);
     const [filter, setFilter] = React.useState<'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED'>('ALL');
     const [isLoading, setIsLoading] = React.useState(false);
@@ -96,6 +99,12 @@ export default function AdminPage() {
                                 className="px-4 py-2 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary-dark transition"
                             >
                                 🔄 새로고침
+                            </button>
+                            <button
+                                onClick={logout}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold text-sm hover:bg-red-600 transition"
+                            >
+                                🚪 로그아웃
                             </button>
                             <Link
                                 href="/"

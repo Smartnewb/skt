@@ -6,8 +6,11 @@ import { formatCurrency } from '@/lib/validation';
 import { ApplicationData } from '@/types/application';
 import { motion } from 'framer-motion';
 import { getApplication, updateApplicationStatus } from '@/lib/database';
+import { useAdminAuth } from '@/lib/adminAuth';
 
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
+    useAdminAuth(); // Protect this page
+
     const router = useRouter();
     const [application, setApplication] = React.useState<
         (ApplicationData & { id: string }) | null
