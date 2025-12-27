@@ -9,26 +9,22 @@ import { getApplication, updateApplicationStatus } from '@/lib/database';
 import { useAdminAuth } from '@/lib/adminAuth';
 
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
-    useAdminAuth(); // Protect this page
+    useAdminAuth();
 
     const router = useRouter();
-    const [application, setApplication] = React.useState<
-        (ApplicationData & { id: string }) | null
-    >(null);
+    const [application, setApplication] = React.useState<(ApplicationData & { id: string }) | null>(null);
     const [status, setStatus] = React.useState<'PENDING' | 'PROCESSING' | 'COMPLETED'>('PENDING');
     const [isLoading, setIsLoading] = React.useState(false);
 
     React.useEffect(() => {
         const loadApplication = async () => {
             try {
-                // Try loading from Supabase first
                 const app = await getApplication(params.id);
                 setApplication(app);
                 setStatus(app.status || 'PENDING');
             } catch (error) {
                 console.error('Error loading from Supabase:', error);
 
-                // Fallback to localStorage
                 const stored = localStorage.getItem('applications');
                 if (stored) {
                     const apps = JSON.parse(stored);
@@ -47,12 +43,10 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     const handleStatusChange = async (newStatus: typeof status) => {
         setIsLoading(true);
         try {
-            // Update in Supabase
             const updatedApp = await updateApplicationStatus(params.id, newStatus);
             setStatus(newStatus);
             setApplication(updatedApp);
 
-            // Also update localStorage as backup
             const stored = localStorage.getItem('applications');
             if (stored) {
                 const apps = JSON.parse(stored);
@@ -108,13 +102,14 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">상태 관리</h2>
                     <div className="flex gap-3">
-                        {['PENDING', 'PROCESSING', 'COMPLETED'].map((s) => (
+                        {(['PENDING', 'PROCESSING', 'COMPLETED'] as const).map((s) => (
                             <button
                                 key={s}
-                                onClick={() => handleStatusChange(s as typeof status)}
+                                onClick={() => handleStatusChange(s)}
+                                disabled={isLoading}
                                 className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${status === s
-                                    ? 'bg-primary text-white'
-                                    : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                     }`}
                             >
                                 {s === 'PENDING' && '접수 대기'}
@@ -134,24 +129,33 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">선택 상품</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-sm text-text-secondary mb-1">상품</p>
-                            <p className="font-semibold text-text-primary">
-                                {product?.speed} + {product?.tvType}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-text-secondary mb-1">월 요금</p>
-                            <p className="font-semibold text-text-primary">
-                                {product?.monthlyPrice ? formatCurrency(product.monthlyPrice) : '-'}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-text-secondary mb-1">사은품</p>
-                            <p className="font-semibold text-primary">
-                                {product?.cashBenefit ? formatCurrency(product.cashBenefit) : '-'}
-                            </p>
-                        </div>
+                        <InfoItem
+                            label="카테고리"
+                            value={
+                                product?.category === 'INTERNET_ONLY' ? '인터넷 단독' :
+                                    product?.category === 'INTERNET_PHONE' ? '인터넷+집전화' :
+                                        product?.category === 'INTERNET_TV' ? '인터넷+BTV' : '-'
+                            }
+                        />
+                        <InfoItem
+                            label="할인 유형"
+                            value={
+                                product?.discountType === 'MOBILE_COMBO' ? '휴대폰 결합 ⭐' :
+                                    product?.discountType === 'FAMILY_COMBO' ? '패밀리 결합' :
+                                        product?.discountType === 'GENERAL' ? '일반상품' : '-'
+                            }
+                        />
+                        <InfoItem label="속도" value={product?.speed} />
+                        {product?.tvType && <InfoItem label="TV 타입" value={product.tvType} />}
+                        <InfoItem label="월 요금" value={product?.monthlyPrice ? formatCurrency(product.monthlyPrice) : undefined} />
+                        <InfoItem label="사은품" value={product?.cashBenefit ? formatCurrency(product.cashBenefit) : undefined} />
+                        {product?.wifiRouter && (
+                            <div className="col-span-2 bg-blue-50 rounded-lg p-3">
+                                <p className="text-sm font-semibold text-blue-900">
+                                    📡 WiFi 공유기 포함 (+1,100원/월)
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </motion.div>
 
@@ -164,36 +168,27 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">가입자 정보</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <InfoItem label="고객 구분" value={
-                            applicant?.customerType === 'PERSONAL' ? '개인' :
-                                applicant?.customerType === 'INDIVIDUAL_BIZ' ? '개인사업자' :
-                                    applicant?.customerType === 'CORPORATE' ? '법인' : '외국인'
-                        } />
+                        <InfoItem
+                            label="고객 구분"
+                            value={
+                                applicant?.customerType === 'PERSONAL' ? '개인' :
+                                    applicant?.customerType === 'INDIVIDUAL_BIZ' ? '개인사업자' :
+                                        applicant?.customerType === 'CORPORATE' ? '법인' : '외국인'
+                            }
+                        />
                         <InfoItem label="이름" value={applicant?.name} />
-                        <InfoItem
-                            label="생년월일"
-                            value={maskSensitiveData(applicant?.birthDate || '', 6)}
-                        />
-                        <InfoItem
-                            label="성별"
-                            value={applicant?.gender === 'MALE' ? '남성' : '여성'}
-                        />
+                        <InfoItem label="생년월일" value={maskSensitiveData(applicant?.birthDate || '', 6)} />
+                        <InfoItem label="성별" value={applicant?.gender === 'MALE' ? '남성' : '여성'} />
                         {applicant?.businessName && (
                             <>
                                 <InfoItem label="사업자명" value={applicant.businessName} />
-                                <InfoItem
-                                    label="사업자등록번호"
-                                    value={maskSensitiveData(applicant.businessRegNumber || '', 5)}
-                                />
+                                <InfoItem label="사업자등록번호" value={maskSensitiveData(applicant.businessRegNumber || '', 5)} />
                             </>
                         )}
                         <InfoItem label="연락처" value={applicant?.contact.phone} />
                         <InfoItem label="이메일" value={applicant?.email} />
                         <div className="col-span-2">
-                            <InfoItem
-                                label="설치 주소"
-                                value={`${applicant?.address.basic} ${applicant?.address.detail}`}
-                            />
+                            <InfoItem label="설치 주소" value={`${applicant?.address.basic} ${applicant?.address.detail}`} />
                         </div>
                     </div>
                 </motion.div>
@@ -211,19 +206,13 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                         {payment?.method === 'BANK_TRANSFER' && (
                             <>
                                 <InfoItem label="은행" value={payment.bankCode} />
-                                <InfoItem
-                                    label="계좌번호"
-                                    value={maskSensitiveData(payment.accountNumber || '', 4)}
-                                />
+                                <InfoItem label="계좌번호" value={maskSensitiveData(payment.accountNumber || '', 4)} />
                             </>
                         )}
                         {payment?.method === 'CARD' && (
                             <>
                                 <InfoItem label="카드사" value={payment.cardCompany} />
-                                <InfoItem
-                                    label="카드번호"
-                                    value={maskSensitiveData(payment.cardNumber || '', 4)}
-                                />
+                                <InfoItem label="카드번호" value={maskSensitiveData(payment.cardNumber || '', 4)} />
                             </>
                         )}
                     </div>
@@ -240,10 +229,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                     <div className="grid grid-cols-2 gap-4">
                         <InfoItem label="수령인" value={giftRecipient?.name} />
                         <InfoItem label="은행" value={giftRecipient?.bankCode} />
-                        <InfoItem
-                            label="계좌번호"
-                            value={maskSensitiveData(giftRecipient?.accountNumber || '', 4)}
-                        />
+                        <InfoItem label="계좌번호" value={maskSensitiveData(giftRecipient?.accountNumber || '', 4)} />
                         <InfoItem label="상품권 옵션" value={giftRecipient?.giftCardOption} />
                     </div>
                 </motion.div>
