@@ -6,6 +6,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { AddressSearch } from '@/components/AddressSearch';
 import { useApplicationStore } from '@/store/useApplicationStore';
 import { CustomerType, Gender, ApplicantInfo } from '@/types/application';
 import { CARRIERS } from '@/lib/mockData';
@@ -83,12 +84,23 @@ export default function CustomerInfoPage() {
         }
     };
 
-    const openAddressSearch = () => {
-        // Daum Postcode API integration would go here
-        // For now, we'll use a simple prompt
-        const address = prompt('주소를 입력하세요:');
-        if (address) {
-            handleInputChange('address.basic', address);
+    const handleAddressComplete = (data: {
+        zonecode: string;
+        address: string;
+        buildingName?: string;
+    }) => {
+        setFormData({
+            ...formData,
+            address: {
+                ...formData.address!,
+                zipcode: data.zonecode,
+                basic: data.address,
+            },
+        });
+
+        // Clear address errors
+        if (errors['address.basic']) {
+            setErrors({ ...errors, 'address.basic': '' });
         }
     };
 
@@ -163,8 +175,8 @@ export default function CustomerInfoPage() {
                                 key={type.value}
                                 onClick={() => handleCustomerTypeChange(type.value as CustomerType)}
                                 className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${customerType === type.value
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                     }`}
                                 whileTap={{ scale: 0.97 }}
                             >
@@ -203,8 +215,8 @@ export default function CustomerInfoPage() {
                                     key={gender}
                                     onClick={() => handleInputChange('gender', gender)}
                                     className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${formData.gender === gender
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                         }`}
                                     whileTap={{ scale: 0.97 }}
                                 >
@@ -317,13 +329,7 @@ export default function CustomerInfoPage() {
                                     disabled
                                     className="flex-1"
                                 />
-                                <Button
-                                    type="button"
-                                    onClick={openAddressSearch}
-                                    className="!w-auto px-6 whitespace-nowrap"
-                                >
-                                    주소 검색
-                                </Button>
+                                <AddressSearch onComplete={handleAddressComplete} />
                             </div>
                             <Input
                                 value={formData.address?.basic || ''}
