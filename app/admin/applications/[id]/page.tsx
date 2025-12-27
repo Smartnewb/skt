@@ -1,8 +1,8 @@
-import { getBankName } from '@/lib/bankNames';
 'use client';
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { getBankName } from '@/lib/bankNames';
 import { formatCurrency } from '@/lib/validation';
 import { ApplicationData } from '@/types/application';
 import { motion } from 'framer-motion';
