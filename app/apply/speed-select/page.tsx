@@ -169,6 +169,81 @@ export default function SpeedSelectPage() {
                 </p>
             </div>
 
+            {/* Helpful Links */}
+            <div className="px-6 mt-8 mb-8">
+                <h3 className="text-sm font-bold text-text-primary mb-4">📌 유용한 정보</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* 설치주소 조회 */}
+                    <a
+                        href="https://www.bworld.co.kr/myb/product/join/address/svcAveSearch.do"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white rounded-xl border-2 border-border p-4 hover:border-primary transition group"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="text-2xl">📍</div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-text-primary mb-1 group-hover:text-primary transition">
+                                    설치주소 조회
+                                </h4>
+                                <p className="text-xs text-text-secondary mb-3">
+                                    우리 집 인터넷 설치 가능 여부 확인
+                                </p>
+                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-2 px-4 rounded-lg text-sm font-bold">
+                                    확인하기 →
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                    {/* 제휴카드 할인 */}
+                    <a
+                        href="https://www.bworld.co.kr/event/page.do?menu_id=B06000000"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white rounded-xl border-2 border-border p-4 hover:border-primary transition group"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="text-2xl">💳</div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-text-primary mb-1 group-hover:text-primary transition">
+                                    제휴카드 할인
+                                </h4>
+                                <p className="text-xs text-text-secondary mb-3">
+                                    카드사별 추가 할인 혜택 확인
+                                </p>
+                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-2 px-4 rounded-lg text-sm font-bold">
+                                    확인하기 →
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                    {/* BTV 채널보기 */}
+                    <a
+                        href="https://www.bworld.co.kr/content/realtime/realtime_list.do?menu_id=P03030100"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white rounded-xl border-2 border-border p-4 hover:border-primary transition group"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="text-2xl">📺</div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-text-primary mb-1 group-hover:text-primary transition">
+                                    BTV 채널보기
+                                </h4>
+                                <p className="text-xs text-text-secondary mb-3">
+                                    SK BTV에서 시청 가능한 채널
+                                </p>
+                                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center py-2 px-4 rounded-lg text-sm font-bold">
+                                    확인하기 →
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
             {/* Sticky Bottom Button */}
             {selectedSpeed && (
                 <motion.div
