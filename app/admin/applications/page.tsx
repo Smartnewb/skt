@@ -6,6 +6,7 @@ import { getApplications } from '@/lib/database';
 import { ApplicationData } from '@/types/application';
 import { StatusBadge, mapOldStatus } from '@/components/admin/StatusDropdown';
 import { useAdminAuth } from '@/lib/adminAuth';
+import { formatProductName } from '@/lib/productFormatter';
 
 export default function ApplicationsPage() {
     useAdminAuth(); // 🔒 Security: Auth protection
@@ -210,7 +211,7 @@ export default function ApplicationsPage() {
                                             {maskPhone(app.applicant?.contact?.phone)}
                                         </td>
                                         <td className="px-4 py-3 text-gray-600">
-                                            {app.product?.speed || '-'}
+                                            {formatProductName(app.product)}
                                         </td>
                                         <td className="px-4 py-3 text-primary font-semibold">
                                             {app.product?.cashBenefit
