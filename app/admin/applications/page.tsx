@@ -5,8 +5,10 @@ import { motion } from 'framer-motion';
 import { getApplications } from '@/lib/database';
 import { ApplicationData } from '@/types/application';
 import { StatusBadge, mapOldStatus } from '@/components/admin/StatusDropdown';
+import { useAdminAuth } from '@/lib/adminAuth';
 
 export default function ApplicationsPage() {
+    useAdminAuth(); // 🔒 Security: Auth protection
     const router = useRouter();
     const [applications, setApplications] = React.useState<(ApplicationData & { id: string })[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
