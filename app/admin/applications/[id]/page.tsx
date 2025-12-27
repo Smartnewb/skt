@@ -17,36 +17,52 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     const [isLoading, setIsLoading] = React.useState(true);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+    const [debugInfo, setDebugInfo] = React.useState<any>(null);
 
     React.useEffect(() => {
         const loadApplication = async () => {
             setIsLoading(true);
             setError(null);
+            console.log('Loading application with ID:', params.id);
+
             try {
                 const app = await getApplication(params.id);
+                console.log('Successfully loaded application:', app);
                 setApplication(app);
                 setStatus(app.status || 'PENDING');
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error loading from Supabase:', error);
-                
+                setDebugInfo({
+                    error: error.message,
+                    stack: error.stack,
+                    id: params.id
+                });
+
+                // Fallback to localStorage
                 const stored = localStorage.getItem('applications');
+                console.log('Trying localStorage fallback...');
+
                 if (stored) {
                     const apps = JSON.parse(stored);
+                    console.log('Found apps in localStorage:', apps.length);
                     const app = apps.find((a: any) => a.id === params.id);
                     if (app) {
+                        console.log('Found app in localStorage:', app);
                         setApplication(app);
                         setStatus(app.status);
                     } else {
-                        setError('신청서를 찾을 수 없습니다.');
+                        console.error('App not found in localStorage with ID:', params.id);
+                        setError('신청서를 찾을 수 없습니다 (로컬에서도 없음)');
                     }
                 } else {
-                    setError('신청서를 찾을 수 없습니다.');
+                    console.error('No localStorage data found');
+                    setError('신청서를 찾을 수 없습니다 (Supabase 및 로컬 모두 없음)');
                 }
             } finally {
                 setIsLoading(false);
             }
         };
-        
+
         loadApplication();
     }, [params.id]);
 
@@ -56,7 +72,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
             const updatedApp = await updateApplicationStatus(params.id, newStatus);
             setStatus(newStatus);
             setApplication(updatedApp);
-            
+
             const stored = localStorage.getItem('applications');
             if (stored) {
                 const apps = JSON.parse(stored);
@@ -85,6 +101,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                     <p className="text-text-secondary">신청서를 불러오는 중...</p>
+                    <p className="text-xs text-text-secondary mt-2">ID: {params.id}</p>
                 </div>
             </div>
         );
@@ -93,21 +110,39 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     // Error state
     if (error || !application) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+                <div className="text-center max-w-2xl">
                     <div className="text-6xl mb-4">❌</div>
                     <h2 className="text-xl font-bold text-text-primary mb-2">
                         {error || '신청서를 찾을 수 없습니다'}
                     </h2>
                     <p className="text-text-secondary mb-6">
-                        신청서가 존재하지 않거나 삭제되었을 수 있습니다.
+                        신청서가 존재하지 않거나 데이터베이스 연결에 문제가 있을 수 있습니다.
                     </p>
-                    <button
-                        onClick={() => router.push('/admin')}
-                        className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition"
-                    >
-                        목록으로 돌아가기
-                    </button>
+
+                    {debugInfo && (
+                        <details className="text-left bg-gray-100 rounded-lg p-4 mb-4">
+                            <summary className="cursor-pointer font-semibold">🔍 디버그 정보</summary>
+                            <pre className="text-xs mt-2 overflow-auto">
+                                {JSON.stringify(debugInfo, null, 2)}
+                            </pre>
+                        </details>
+                    )}
+
+                    <div className="flex gap-3 justify-center">
+                        <button
+                            onClick={() => router.push('/admin')}
+                            className="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition"
+                        >
+                            목록으로 돌아가기
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin/test-supabase')}
+                            className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition"
+                        >
+                            연결 테스트
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -127,6 +162,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                         ← 목록으로
                     </button>
                     <h1 className="text-3xl font-bold text-text-primary">신청서 상세</h1>
+                    <p className="text-xs text-text-secondary mt-1">ID: {params.id}</p>
                 </div>
             </div>
 
@@ -143,11 +179,11 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                             <button
                                 key={s}
                                 onClick={() => handleStatusChange(s)}
-                                disabled={isLoading}
+                                disabled={isUpdating}
                                 className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${status === s
                                         ? 'bg-primary text-white'
                                         : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
-                                    }`}
+                                    } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {s === 'PENDING' && '접수 대기'}
                                 {s === 'PROCESSING' && '처리중'}
