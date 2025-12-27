@@ -87,16 +87,16 @@ export default function AdminPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-white border-b border-border">
-                <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="bg-gradient-to-r from-primary to-orange-600 text-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
                     <div className="flex justify-between items-center">
                         <div>
-                            <h1 className="text-3xl font-bold text-text-primary">관리자 대시보드</h1>
-                            <p className="text-sm text-text-secondary mt-1">
+                            <h1 className="text-2xl sm:text-3xl font-bold">관리자 대시보드</h1>
+                            <p className="text-sm sm:text-base text-white/90 mt-1">
                                 퍼펙트PC통신 X SK브로드밴드 인터넷/BTV 가입 신청 관리
                             </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 mt-3">
                             <button
                                 onClick={loadApplications}
                                 className="px-4 py-2 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary-dark transition"
@@ -122,7 +122,7 @@ export default function AdminPage() {
 
             {/* Stats */}
             <div className="max-w-7xl mx-auto px-6 py-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                     {[
                         { label: '전체 신청', value: stats.total, color: 'blue' },
                         { label: '접수 대기', value: stats.pending, color: 'yellow' },
@@ -134,10 +134,10 @@ export default function AdminPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="bg-white rounded-xl p-6 border border-border shadow-sm"
+                            className="bg-white rounded-xl p-4 sm:p-6 border border-border shadow-sm"
                         >
-                            <p className="text-sm text-text-secondary mb-2">{stat.label}</p>
-                            <p className="text-3xl font-bold text-text-primary">{stat.value}</p>
+                            <p className="text-xs sm:text-sm text-text-secondary mb-1 sm:mb-2">{stat.label}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-text-primary">{stat.value}</p>
                         </motion.div>
                     ))}
                 </div>
@@ -251,20 +251,23 @@ export default function AdminPage() {
                         </div>
                     )}
 
+                        
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
+            <div className="md:hidden space-y-3">
                 {filteredApplications.map((app) => (
-                    <div
+                    <motion.div
                         key={app.id}
-                        onClick={() => router.push(`/admin/applications/${app.id}`)}
-                        className="bg-white rounded-xl p-4 shadow border border-gray-200 active:bg-gray-50 cursor-pointer"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white rounded-xl p-5 shadow-md border border-gray-200"
                     >
-                        <div className="flex justify-between items-start mb-3">
-                            <div>
-                                <h3 className="font-bold text-text-primary text-base">{app.applicant?.name}</h3>
+                        {/* Header */}
+                        <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-100">
+                            <div className="flex-1">
+                                <h3 className="font-bold text-text-primary text-lg mb-1">{app.applicant?.name}</h3>
                                 <p className="text-sm text-gray-600">{app.applicant?.phone}</p>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ml-2 ${
                                 app.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                                 app.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
                                 'bg-green-100 text-green-800'
@@ -274,6 +277,40 @@ export default function AdminPage() {
                             </span>
                         </div>
                         
+                        {/* Info Grid */}
+                        <div className="space-y-3 mb-4">
+                            <div className="flex justify-between items-center py-2">
+                                <span className="text-sm text-gray-600 font-medium">상품</span>
+                                <span className="text-sm font-bold text-text-primary">{app.product?.speed}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-2">
+                                <span className="text-sm text-gray-600 font-medium">월 요금</span>
+                                <span className="text-base font-bold text-primary">
+                                    {app.product?.monthlyPrice ? `${app.product.monthlyPrice.toLocaleString()}원` : '-'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center py-2">
+                                <span className="text-sm text-gray-600 font-medium">신청일</span>
+                                <span className="text-sm text-gray-800">
+                                    {app.submittedAt ? new Date(app.submittedAt).toLocaleDateString('ko-KR', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    }) : '-'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Detail Button */}
+                        <button
+                            onClick={() => router.push(`/admin/applications/${app.id}`)}
+                            className="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition active:scale-95"
+                        >
+                            상세보기
+                        </button>
+                    </motion.div>
+                ))}
+            </div>
                         <div className="space-y-2 text-sm border-t border-gray-200 pt-3">
                             <div className="flex justify-between">
                                 <span className="text-gray-600">상품:</span>
