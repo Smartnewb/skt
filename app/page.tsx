@@ -77,13 +77,17 @@ export default function HomePage() {
         })}
       </div>
 
-      {/* Info */}
+      {/* Info Note */}
       <div className="px-6 mt-6">
-        <p className="text-xs text-text-secondary text-center">
+        <p className="text-sm text-text-secondary text-center">
+          * 선택하신 상품에 맞는 최적의 요금을 안내해드립니다
+        </p>
+      </div>
 
       {/* Helpful Links */}
       <div className="px-6 mt-8 mb-8">
-        <h3 className="text-sm font-bold text-text-primary mb-4">📌 유용한 정보</h3>
+        <h3 className="text-lg font-bold text-text-primary mb-4">📌 유용한 정보</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 설치주소 조회 */}
           <a
@@ -154,9 +158,6 @@ export default function HomePage() {
             </div>
           </a>
         </div>
-      </div>
-          * 선택하신 상품에 맞는 최적의 요금을 안내해드립니다
-        </p>
       </div>
 
       {/* Sticky Bottom Button */}
