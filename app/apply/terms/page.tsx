@@ -8,6 +8,7 @@ import { useApplicationStore } from '@/store/useApplicationStore';
 import { TermsAgreement } from '@/types/application';
 import { motion } from 'framer-motion';
 import * as Checkbox from '@radix-ui/react-checkbox';
+import { createApplication } from '@/lib/database';
 
 interface Term {
     id: keyof TermsAgreement;
@@ -51,10 +52,16 @@ const TERMS: Term[] = [
 
 export default function TermsPage() {
     const router = useRouter();
+
+    // Get all application data from store
+    const product = useApplicationStore((state) => state.product);
+    const applicant = useApplicationStore((state) => state.applicant);
+    const payment = useApplicationStore((state) => state.payment);
+    const giftRecipient = useApplicationStore((state) => state.giftRecipient);
     const terms = useApplicationStore((state) => state.terms);
+
     const setTerms = useApplicationStore((state) => state.setTerms);
     const setCustomerRequest = useApplicationStore((state) => state.setCustomerRequest);
-    const submit = useApplicationStore((state) => state.submit);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
 
     const [agreements, setAgreements] = React.useState<TermsAgreement>(
@@ -67,7 +74,7 @@ export default function TermsPage() {
             optional2: false,
         }
     );
-    const [customerRequest, setCustomerRequestLocal] = React.useState('');
+    const [customerRequestLocal, setCustomerRequestLocal] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const handleToggleAll = (checked: boolean) => {
@@ -97,28 +104,53 @@ export default function TermsPage() {
 
     const allRequiredChecked = TERMS.filter((t) => t.required).every((t) => agreements[t.id]);
 
-    const handleSubmit = async () => {
+    const validate = () => {
         if (!allRequiredChecked) {
             alert('필수 약관에 모두 동의해주세요');
-            return;
+            return false;
         }
+        return true;
+    };
 
-        setIsSubmitting(true);
+    const handleSubmit = async () => {
+        if (validate()) {
+            setIsSubmitting(true);
 
-        try {
-            setTerms(agreements);
-            setCustomerRequest(customerRequest);
-            setCurrentStep(5);
+            try {
+                // Update store with current local state before submitting
+                setTerms(agreements);
+                setCustomerRequest(customerRequestLocal);
+                setCurrentStep(5);
 
-            // Submit the application
-            submit();
+                const applicationData = {
+                    product,
+                    applicant,
+                    payment,
+                    giftRecipient,
+                    terms: agreements, // Use the current local agreements state
+                    customerRequest: customerRequestLocal, // Use the current local customer request state
+                    submittedAt: new Date().toISOString(),
+                    status: 'PENDING' as const,
+                };
 
-            // Redirect to completion page
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            router.push('/apply/complete');
-        } catch (error) {
-            alert('제출 중 오류가 발생했습니다.');
-            setIsSubmitting(false);
+                // Save to Supabase
+                const savedApplication = await createApplication(applicationData);
+
+                console.log('Application submitted successfully:', savedApplication.id);
+
+                // Also save to localStorage as backup
+                const existingApps = localStorage.getItem('applications');
+                const apps = existingApps ? JSON.parse(existingApps) : [];
+                apps.push(savedApplication);
+                localStorage.setItem('applications', JSON.stringify(apps));
+
+                router.push('/apply/complete');
+            } catch (error) {
+                console.error('Error submitting application:', error);
+                alert('신청서 제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
@@ -234,7 +266,7 @@ export default function TermsPage() {
                         <textarea
                             className="input-field min-h-[120px] resize-none"
                             placeholder="설치나 상담 시 필요한 요청사항을 입력해주세요"
-                            value={customerRequest}
+                            value={customerRequestLocal}
                             onChange={(e) => setCustomerRequestLocal(e.target.value)}
                         />
                     </div>

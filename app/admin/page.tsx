@@ -5,22 +5,36 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/validation';
 import { ApplicationData } from '@/types/application';
 import { motion } from 'framer-motion';
+import { getApplications } from '@/lib/database';
 
 export default function AdminPage() {
     const [applications, setApplications] = React.useState<(ApplicationData & { id: string })[]>([]);
     const [filter, setFilter] = React.useState<'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED'>('ALL');
+    const [isLoading, setIsLoading] = React.useState(false);
 
-    const loadApplications = () => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('applications');
-            if (stored) {
-                try {
-                    const parsedApps = JSON.parse(stored);
-                    setApplications(parsedApps);
-                } catch (error) {
-                    console.error('Error parsing applications:', error);
+    const loadApplications = async () => {
+        setIsLoading(true);
+        try {
+            // Try to load from Supabase first
+            const apps = await getApplications();
+            setApplications(apps);
+        } catch (error) {
+            console.error('Error loading from Supabase:', error);
+
+            // Fallback to localStorage
+            if (typeof window !== 'undefined') {
+                const stored = localStorage.getItem('applications');
+                if (stored) {
+                    try {
+                        const parsedApps = JSON.parse(stored);
+                        setApplications(parsedApps);
+                    } catch (error) {
+                        console.error('Error parsing applications:', error);
+                    }
                 }
             }
+        } finally {
+            setIsLoading(false);
         }
     };
 

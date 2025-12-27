@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/lib/validation';
 import { ApplicationData } from '@/types/application';
 import { motion } from 'framer-motion';
+import { getApplication, updateApplicationStatus } from '@/lib/database';
 
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -12,32 +13,56 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         (ApplicationData & { id: string }) | null
     >(null);
     const [status, setStatus] = React.useState<'PENDING' | 'PROCESSING' | 'COMPLETED'>('PENDING');
+    const [isLoading, setIsLoading] = React.useState(false);
 
     React.useEffect(() => {
-        // Load application from localStorage
-        const stored = localStorage.getItem('applications');
-        if (stored) {
-            const apps = JSON.parse(stored);
-            const app = apps.find((a: any) => a.id === params.id);
-            if (app) {
+        const loadApplication = async () => {
+            try {
+                // Try loading from Supabase first
+                const app = await getApplication(params.id);
                 setApplication(app);
-                setStatus(app.status);
+                setStatus(app.status || 'PENDING');
+            } catch (error) {
+                console.error('Error loading from Supabase:', error);
+
+                // Fallback to localStorage
+                const stored = localStorage.getItem('applications');
+                if (stored) {
+                    const apps = JSON.parse(stored);
+                    const app = apps.find((a: any) => a.id === params.id);
+                    if (app) {
+                        setApplication(app);
+                        setStatus(app.status);
+                    }
+                }
             }
-        }
+        };
+
+        loadApplication();
     }, [params.id]);
 
-    const handleStatusChange = (newStatus: typeof status) => {
-        setStatus(newStatus);
+    const handleStatusChange = async (newStatus: typeof status) => {
+        setIsLoading(true);
+        try {
+            // Update in Supabase
+            const updatedApp = await updateApplicationStatus(params.id, newStatus);
+            setStatus(newStatus);
+            setApplication(updatedApp);
 
-        // Update in localStorage
-        const stored = localStorage.getItem('applications');
-        if (stored) {
-            const apps = JSON.parse(stored);
-            const updatedApps = apps.map((a: any) =>
-                a.id === params.id ? { ...a, status: newStatus } : a
-            );
-            localStorage.setItem('applications', JSON.stringify(updatedApps));
-            setApplication({ ...application!, status: newStatus });
+            // Also update localStorage as backup
+            const stored = localStorage.getItem('applications');
+            if (stored) {
+                const apps = JSON.parse(stored);
+                const updatedApps = apps.map((a: any) =>
+                    a.id === params.id ? { ...a, status: newStatus } : a
+                );
+                localStorage.setItem('applications', JSON.stringify(updatedApps));
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('상태 업데이트 중 오류가 발생했습니다.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -85,8 +110,8 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                                 key={s}
                                 onClick={() => handleStatusChange(s as typeof status)}
                                 className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${status === s
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
                                     }`}
                             >
                                 {s === 'PENDING' && '접수 대기'}
