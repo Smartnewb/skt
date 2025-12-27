@@ -8,6 +8,7 @@ interface ApplicationStore extends ApplicationData {
     selectedDiscountType?: DiscountType;
 
     currentStep: number;
+    agreements: any | null;
     setCurrentStep: (step: number) => void;
 
     // New setters for category and discount
