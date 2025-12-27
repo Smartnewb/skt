@@ -204,7 +204,7 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                     className="bg-white rounded-xl p-6 border border-border"
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">선택 상품</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoItem 
                             label="카테고리" 
                             value={
@@ -243,7 +243,7 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                     className="bg-white rounded-xl p-6 border border-border"
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">가입자 정보</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoItem 
                             label="고객 구분" 
                             value={
@@ -277,7 +277,7 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                     className="bg-white rounded-xl p-6 border border-border"
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">납부 정보</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoItem label="납부 방식" value={payment?.method === 'BANK_TRANSFER' ? '은행 자동이체' : '카드 결제'} />
                         {payment?.method === 'BANK_TRANSFER' && (
                             <>
@@ -302,7 +302,7 @@ function ApplicationDetailPageContent({ applicationId }: { applicationId: string
                     className="bg-white rounded-xl p-6 border border-border"
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">사은품 수령 정보</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoItem label="수령인" value={giftRecipient?.name} />
                         <InfoItem label="은행" value={giftRecipient?.bankCode ? getBankName(giftRecipient.bankCode) : undefined} />
                         <InfoItem label="계좌번호" value={giftRecipient?.bankCode && giftRecipient?.accountNumber ? formatAccountNumber(giftRecipient.bankCode, giftRecipient.accountNumber) : giftRecipient?.accountNumber || ''} />
