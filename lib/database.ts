@@ -6,6 +6,8 @@ export function transformApplicationToDb(data: ApplicationData) {
     return {
         // Product
         product_id: data.product?.id,
+        product_category: data.product?.category,
+        product_discount_type: data.product?.discountType,
         product_speed: data.product?.speed,
         product_tv_type: data.product?.tvType,
         product_monthly_price: data.product?.monthlyPrice,
