@@ -70,8 +70,17 @@ export function TimelineMemo({ memos, onAddMemo, onPinMemo, isLoading }: Timelin
                 <div className="bg-yellow-50 border-b border-yellow-200 p-3">
                     <div className="text-xs text-yellow-800 font-semibold mb-2">📌 고정된 메모</div>
                     {pinnedMemos.map((memo) => (
-                        <div key={memo.id} className="text-sm text-yellow-900 mb-1 last:mb-0">
-                            {memo.content}
+                        <div key={memo.id} className="group flex items-start justify-between mb-2 last:mb-0">
+                            <div className="text-sm text-yellow-900 flex-1">{memo.content}</div>
+                            {onPinMemo && (
+                                <button
+                                    onClick={() => onPinMemo(memo.id, false)}
+                                    className="ml-2 text-yellow-600 hover:text-yellow-800 transition text-sm"
+                                    title="고정 해제"
+                                >
+                                    ✕
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -99,9 +108,9 @@ export function TimelineMemo({ memos, onAddMemo, onPinMemo, isLoading }: Timelin
                                 <span className="text-lg">{getLogIcon(memo.logType)}</span>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs font-semibold text-gray-700">
+                                                className="opacity-0 group-hover:opacity-100 px-2 py-1 text-xs rounded hover:bg-yellow-50 transition"
                                             {memo.adminName}
-                                        </span>
+                                                {memo.isPinned ? "📍 고정됨" : "📌 고정"}
                                         <span className="text-xs text-gray-400">
                                             {formatTime(memo.createdAt)}
                                         </span>
