@@ -8,9 +8,9 @@ import { motion } from 'framer-motion';
 import { getApplication, updateApplicationStatus } from '@/lib/database';
 import { useAdminAuth } from '@/lib/adminAuth';
 
-export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
+function ApplicationDetailPageContent({ applicationId }: { applicationId: string }) {
     useAdminAuth();
-
+    
     const router = useRouter();
     const [application, setApplication] = React.useState<(ApplicationData & { id: string }) | null>(null);
     const [status, setStatus] = React.useState<'PENDING' | 'PROCESSING' | 'COMPLETED'>('PENDING');
@@ -23,10 +23,10 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         const loadApplication = async () => {
             setIsLoading(true);
             setError(null);
-            console.log('Loading application with ID:', params.id);
-
+            console.log('Loading application with ID:', applicationId);
+            
             try {
-                const app = await getApplication(params.id);
+                const app = await getApplication(applicationId);
                 console.log('Successfully loaded application:', app);
                 setApplication(app);
                 setStatus(app.status || 'PENDING');
@@ -35,23 +35,23 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 setDebugInfo({
                     error: error.message,
                     stack: error.stack,
-                    id: params.id
+                    id: applicationId
                 });
-
+                
                 // Fallback to localStorage
                 const stored = localStorage.getItem('applications');
                 console.log('Trying localStorage fallback...');
-
+                
                 if (stored) {
                     const apps = JSON.parse(stored);
                     console.log('Found apps in localStorage:', apps.length);
-                    const app = apps.find((a: any) => a.id === params.id);
+                    const app = apps.find((a: any) => a.id === applicationId);
                     if (app) {
                         console.log('Found app in localStorage:', app);
                         setApplication(app);
                         setStatus(app.status);
                     } else {
-                        console.error('App not found in localStorage with ID:', params.id);
+                        console.error('App not found in localStorage with ID:', applicationId);
                         setError('신청서를 찾을 수 없습니다 (로컬에서도 없음)');
                     }
                 } else {
@@ -62,22 +62,22 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 setIsLoading(false);
             }
         };
-
+        
         loadApplication();
-    }, [params.id]);
+    }, [applicationId]);
 
     const handleStatusChange = async (newStatus: typeof status) => {
         setIsUpdating(true);
         try {
-            const updatedApp = await updateApplicationStatus(params.id, newStatus);
+            const updatedApp = await updateApplicationStatus(applicationId, newStatus);
             setStatus(newStatus);
             setApplication(updatedApp);
-
+            
             const stored = localStorage.getItem('applications');
             if (stored) {
                 const apps = JSON.parse(stored);
                 const updatedApps = apps.map((a: any) =>
-                    a.id === params.id ? { ...a, status: newStatus } : a
+                    a.id === applicationId ? { ...a, status: newStatus } : a
                 );
                 localStorage.setItem('applications', JSON.stringify(updatedApps));
             }
@@ -101,7 +101,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                     <p className="text-text-secondary">신청서를 불러오는 중...</p>
-                    <p className="text-xs text-text-secondary mt-2">ID: {params.id}</p>
+                    <p className="text-xs text-text-secondary mt-2">ID: {applicationId}</p>
                 </div>
             </div>
         );
@@ -119,7 +119,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                     <p className="text-text-secondary mb-6">
                         신청서가 존재하지 않거나 데이터베이스 연결에 문제가 있을 수 있습니다.
                     </p>
-
+                    
                     {debugInfo && (
                         <details className="text-left bg-gray-100 rounded-lg p-4 mb-4">
                             <summary className="cursor-pointer font-semibold">🔍 디버그 정보</summary>
@@ -128,7 +128,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                             </pre>
                         </details>
                     )}
-
+                    
                     <div className="flex gap-3 justify-center">
                         <button
                             onClick={() => router.push('/admin')}
@@ -162,7 +162,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                         ← 목록으로
                     </button>
                     <h1 className="text-3xl font-bold text-text-primary">신청서 상세</h1>
-                    <p className="text-xs text-text-secondary mt-1">ID: {params.id}</p>
+                    <p className="text-xs text-text-secondary mt-1">ID: {applicationId}</p>
                 </div>
             </div>
 
@@ -180,10 +180,11 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                                 key={s}
                                 onClick={() => handleStatusChange(s)}
                                 disabled={isUpdating}
-                                className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${status === s
+                                className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${
+                                    status === s
                                         ? 'bg-primary text-white'
                                         : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
-                                    } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {s === 'PENDING' && '접수 대기'}
                                 {s === 'PROCESSING' && '처리중'}
@@ -202,21 +203,21 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">선택 상품</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <InfoItem
-                            label="카테고리"
+                        <InfoItem 
+                            label="카테고리" 
                             value={
                                 product?.category === 'INTERNET_ONLY' ? '인터넷 단독' :
-                                    product?.category === 'INTERNET_PHONE' ? '인터넷+집전화' :
-                                        product?.category === 'INTERNET_TV' ? '인터넷+BTV' : '-'
-                            }
+                                product?.category === 'INTERNET_PHONE' ? '인터넷+집전화' :
+                                product?.category === 'INTERNET_TV' ? '인터넷+BTV' : '-'
+                            } 
                         />
-                        <InfoItem
-                            label="할인 유형"
+                        <InfoItem 
+                            label="할인 유형" 
                             value={
                                 product?.discountType === 'MOBILE_COMBO' ? '휴대폰 결합 ⭐' :
-                                    product?.discountType === 'FAMILY_COMBO' ? '패밀리 결합' :
-                                        product?.discountType === 'GENERAL' ? '일반상품' : '-'
-                            }
+                                product?.discountType === 'FAMILY_COMBO' ? '패밀리 결합' :
+                                product?.discountType === 'GENERAL' ? '일반상품' : '-'
+                            } 
                         />
                         <InfoItem label="속도" value={product?.speed} />
                         {product?.tvType && <InfoItem label="TV 타입" value={product.tvType} />}
@@ -241,13 +242,13 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 >
                     <h2 className="text-lg font-bold text-text-primary mb-4">가입자 정보</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <InfoItem
-                            label="고객 구분"
+                        <InfoItem 
+                            label="고객 구분" 
                             value={
                                 applicant?.customerType === 'PERSONAL' ? '개인' :
-                                    applicant?.customerType === 'INDIVIDUAL_BIZ' ? '개인사업자' :
-                                        applicant?.customerType === 'CORPORATE' ? '법인' : '외국인'
-                            }
+                                applicant?.customerType === 'INDIVIDUAL_BIZ' ? '개인사업자' :
+                                applicant?.customerType === 'CORPORATE' ? '법인' : '외국인'
+                            } 
                         />
                         <InfoItem label="이름" value={applicant?.name} />
                         <InfoItem label="생년월일" value={maskSensitiveData(applicant?.birthDate || '', 6)} />
@@ -331,4 +332,9 @@ function InfoItem({ label, value }: { label: string; value?: string }) {
             <p className="font-semibold text-text-primary">{value || '-'}</p>
         </div>
     );
+}
+
+export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    return <ApplicationDetailPageContent applicationId={id} />;
 }
