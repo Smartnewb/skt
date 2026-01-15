@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface CopyButtonProps {
     text: string;
     label?: string;
+    showText?: boolean;
 }
 
-export function CopyButton({ text, label }: CopyButtonProps) {
+export function CopyButton({ text, label, showText = true }: CopyButtonProps) {
     const [copied, setCopied] = React.useState(false);
 
     const handleCopy = async () => {
@@ -24,7 +25,7 @@ export function CopyButton({ text, label }: CopyButtonProps) {
     return (
         <div className="inline-flex items-center gap-2">
             {label && <span className="text-gray-600 text-sm">{label}:</span>}
-            <span className="font-medium">{text}</span>
+            {showText && <span className="font-medium">{text}</span>}
             <button
                 onClick={handleCopy}
                 className="p-1 hover:bg-gray-100 rounded transition relative"

@@ -11,6 +11,8 @@ import { CopyButton } from '@/components/admin/CopyButton';
 import { StatusDropdown, mapOldStatus, AdminStatus, STATUS_CONFIG } from '@/components/admin/StatusDropdown';
 import { TimelineMemo } from '@/components/admin/TimelineMemo';
 import { RiskAlerts } from '@/components/admin/RiskBadge';
+import { PRICE_TABLES } from '@/lib/productPricing';
+import { formatCurrency } from '@/lib/validation';
 
 // Mock memos for now (will be replaced with Supabase)
 interface MemoEntry {
@@ -23,6 +25,63 @@ interface MemoEntry {
     createdAt: string;
 }
 
+// Generate application summary text for customer
+function generateApplicationSummary(
+    applicant: ApplicationData['applicant'],
+    product: ApplicationData['product'],
+    payment: ApplicationData['payment'],
+    giftRecipient: ApplicationData['giftRecipient']
+): string {
+    const lines: string[] = [];
+
+    lines.push(`1. 성명: ${applicant?.name || '-'}`);
+    lines.push(`2. 주민번호: ${applicant?.birthDate || '-'}`);
+    lines.push(`3. 연락처: ${applicant?.contact?.phone || '-'}`);
+    lines.push(`4. 주소: ${applicant?.address?.basic || ''} ${applicant?.address?.detail || ''}`);
+
+    // Payment method
+    let paymentInfo = '카드결제';
+    if (payment?.method === 'BANK_TRANSFER' && payment?.bankCode) {
+        const bankName = getBankName(payment.bankCode);
+        const accountNum = payment?.accountNumber
+            ? formatAccountNumber(payment.bankCode, payment.accountNumber)
+            : '';
+        paymentInfo = `${bankName} ${accountNum}`;
+    }
+    lines.push(`5. 요금납부방법(계좌번호): ${paymentInfo}`);
+
+    // Product
+    const productParts: string[] = [];
+    if (product?.category === 'INTERNET_ONLY') {
+        productParts.push('인터넷 단독');
+    } else if (product?.category === 'INTERNET_PHONE') {
+        productParts.push('인터넷 + 집전화');
+    } else if (product?.category === 'INTERNET_TV') {
+        productParts.push('인터넷 + BTV');
+        if (product?.tvType) productParts.push(product.tvType);
+    }
+    if (product?.speed) productParts.push(product.speed);
+    if (product?.wifiRouter) productParts.push('WiFi 공유기');
+    lines.push(`6. 신청상품: ${productParts.join(' + ')}`);
+
+    lines.push(`7. 요금: 월 ${product?.monthlyPrice?.toLocaleString() || '-'}원`);
+
+    // Discount type
+    let discountType = '일반';
+    if (product?.discountType === 'MOBILE_COMBO') {
+        discountType = '휴대폰 결합';
+    } else if (product?.discountType === 'FAMILY_COMBO') {
+        discountType = '패밀리 결합';
+    }
+    lines.push(`8. ${discountType}`);
+
+    lines.push(`9. 사은품: 신세계상품권 ${giftRecipient?.giftCardOption || '0원'}, 현금 ${product?.cashBenefit?.toLocaleString() || '0'}원`);
+    lines.push(`10. 설치비: 면제`);
+    lines.push(`11. 설치일정: `);
+
+    return lines.join('\n');
+}
+
 export default function ApplicationDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -32,6 +91,27 @@ export default function ApplicationDetailPage() {
     const [isLoading, setIsLoading] = React.useState(true);
     const [memos, setMemos] = React.useState<MemoEntry[]>([]);
     const [isSaving, setIsSaving] = React.useState(false);
+
+    // Calculate price breakdown (must be before early returns due to React Hooks rules)
+    const WIFI_ROUTER_PRICE = 1100;
+    const priceTable = React.useMemo(() => {
+        if (!application?.product?.category || !application?.product?.speed) return null;
+        return PRICE_TABLES.find(
+            t => t.category === application.product.category &&
+                 t.speed === application.product.speed &&
+                 (application.product.category !== 'INTERNET_TV' || t.tvType === application.product.tvType)
+        );
+    }, [application?.product]);
+
+    const generalPrice = priceTable?.prices.general || 0;
+    const discountedPrice = React.useMemo(() => {
+        if (!application?.product?.discountType || !priceTable) return generalPrice;
+        if (application.product.discountType === 'MOBILE_COMBO') return priceTable.prices.mobileCombo;
+        if (application.product.discountType === 'FAMILY_COMBO') return priceTable.prices.familyCombo;
+        return generalPrice;
+    }, [application?.product, priceTable, generalPrice]);
+
+    const discountAmount = generalPrice - discountedPrice;
 
     React.useEffect(() => {
         if (applicationId) {
@@ -210,14 +290,19 @@ export default function ApplicationDetailPage() {
                                     text={`${applicant?.address?.basic || ''} ${applicant?.address?.detail || ''}`}
                                 />
                             </div>
-                            <div className="flex items-center justify-between py-2">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
                                 <span className="text-sm text-gray-600">이메일</span>
                                 <span className="text-sm">{applicant?.email || '-'}</span>
                             </div>
+                            {applicant?.referrerName && (
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="text-sm text-gray-600">추천인</span>
+                                    <CopyButton text={applicant.referrerName} />
+                                </div>
+                            )}
                         </div>
                     </motion.div>
 
-                    {/* Product Info Card */}
                     {/* Product Info Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -232,16 +317,12 @@ export default function ApplicationDetailPage() {
                             <div className="flex items-center justify-between py-2 border-b border-gray-100">
                                 <span className="text-sm text-gray-600">상품 유형</span>
                                 <span className="text-sm font-medium">
-                                    {product?.category === 'INTERNET_ONLY' ? '인터넷 단독' :
-                                     product?.category === 'INTERNET_PHONE' ? '인터넷 + 전화' :
-                                     product?.category === 'INTERNET_TV' ? '인터넷 + TV' : '-'}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-sm text-gray-600">할인 유형</span>
-                                <span className="text-sm font-medium">
-                                    {product?.discountType === 'MOBILE_COMBO' ? '📱 모바일 결합' :
-                                     product?.discountType === 'FAMILY_COMBO' ? '👨‍👩‍👧 가족 결합' : '일반 가입'}
+                                    {(() => {
+                                        if (product?.category === 'INTERNET_ONLY') return '인터넷 단독';
+                                        if (product?.category === 'INTERNET_PHONE') return '인터넷 + 전화';
+                                        if (product?.category === 'INTERNET_TV') return '인터넷 + TV';
+                                        return '-';
+                                    })()}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-100">
@@ -254,28 +335,39 @@ export default function ApplicationDetailPage() {
                                     <span className="text-sm font-medium">{product.tvType}</span>
                                 </div>
                             )}
-                            {product?.tvDevice && (
-                                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                    <span className="text-sm text-gray-600">TV 기기</span>
-                                    <span className="text-sm font-medium">{product.tvDevice}</span>
+
+                            {/* Price Breakdown */}
+                            <div className="pt-3 border-t-2 border-gray-200">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm text-gray-600">정상 요금</span>
+                                    <span className="text-sm font-semibold">{formatCurrency(generalPrice)}</span>
                                 </div>
-                            )}
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-sm text-gray-600">WiFi 공유기</span>
-                                <span className={`text-sm font-medium ${product?.wifiRouter ? 'text-green-600' : 'text-gray-500'}`}>
-                                    {product?.wifiRouter ? '✓ 신청' : '미신청'}
-                                </span>
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm text-primary font-semibold">
+                                            {product?.discountType === 'MOBILE_COMBO' ? '📱 휴대폰 결합 할인' : '👨‍👩‍👧‍👦 패밀리 결합 할인'}
+                                        </span>
+                                        <span className="text-sm font-semibold text-primary">-{formatCurrency(discountAmount)}</span>
+                                    </div>
+                                )}
+                                {product?.wifiRouter && (
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm text-gray-600">📡 WiFi 공유기</span>
+                                        <span className="text-sm font-semibold">+{formatCurrency(WIFI_ROUTER_PRICE)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                                    <span className="text-sm font-bold text-gray-900">월 최종 요금</span>
+                                    <span className="text-lg font-bold text-primary">
+                                        {formatCurrency(product?.monthlyPrice || 0)}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                                <span className="text-sm text-gray-600">월 요금</span>
-                                <span className="text-sm font-bold text-primary">
-                                    {product?.monthlyPrice?.toLocaleString()}원
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between py-2 bg-primary/10 -mx-6 px-6 rounded-b-lg">
+
+                            <div className="flex items-center justify-between py-2 bg-primary/10 -mx-6 px-6 mt-4 rounded-b-lg">
                                 <span className="text-sm text-primary font-medium">사은품</span>
                                 <span className="text-lg font-bold text-primary">
-                                    {product?.cashBenefit?.toLocaleString()}원
+                                    {formatCurrency(product?.cashBenefit || 0)}
                                 </span>
                             </div>
                         </div>
@@ -374,12 +466,34 @@ export default function ApplicationDetailPage() {
                 </div>
 
                 {/* Right Panel - Workflow & Timeline */}
-                <div className="lg:sticky lg:top-6 h-fit">
+                <div className="lg:sticky lg:top-6 h-fit space-y-6">
+                    {/* Application Summary */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-white rounded-lg p-6 border border-gray-200"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                📋 신청서 정리
+                            </h2>
+                            <CopyButton
+                                text={generateApplicationSummary(applicant, product, payment, giftRecipient)}
+                                showText={false}
+                            />
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4 font-mono text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">
+                            {generateApplicationSummary(applicant, product, payment, giftRecipient)}
+                        </div>
+                    </motion.div>
+
+                    {/* Timeline */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-white rounded-lg border border-gray-200 h-[calc(100vh-200px)] flex flex-col"
+                        className="bg-white rounded-lg border border-gray-200 h-[calc(100vh-450px)] min-h-[400px] flex flex-col"
                     >
                         <div className="p-4 border-b border-gray-200">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
