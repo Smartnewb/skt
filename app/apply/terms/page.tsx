@@ -15,13 +15,18 @@ export default function TermsPage() {
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
     const storedAgreements = useApplicationStore((state) => state.agreements);
     const setAgreements = useApplicationStore((state) => state.setAgreements);
-    const applicationData = useApplicationStore((state) => ({
-        product: state.product,
-        applicant: state.applicant,
-        payment: state.payment,
-        giftRecipient: state.giftRecipient,
-        agreements: state.agreements,
-    }));
+    const product = useApplicationStore((state) => state.product);
+    const applicant = useApplicationStore((state) => state.applicant);
+    const payment = useApplicationStore((state) => state.payment);
+    const giftRecipient = useApplicationStore((state) => state.giftRecipient);
+
+    const applicationData = React.useMemo(() => ({
+        product,
+        applicant,
+        payment,
+        giftRecipient,
+        agreements: storedAgreements,
+    }), [product, applicant, payment, giftRecipient, storedAgreements]);
 
     const [agreements, setLocalAgreements] = React.useState<AgreementState>(
         storedAgreements || getInitialAgreementState()

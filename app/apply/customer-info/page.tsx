@@ -8,24 +8,18 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { AddressSearch } from '@/components/AddressSearch';
 import { useApplicationStore } from '@/store/useApplicationStore';
-import { CustomerType, Gender, ApplicantInfo } from '@/types/application';
+import { ApplicantInfo } from '@/types/application';
 import { CARRIERS } from '@/lib/mockData';
 import {
     formatPhoneNumber,
-    formatBusinessNumber,
     formatBirthDate,
     validatePhoneNumber,
-    validateEmail,
-    validateBirthDate,
-    validateBusinessNumber
+    validateBirthDate
 } from '@/lib/validation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const CUSTOMER_TYPES = [
     { value: 'PERSONAL', label: '개인' },
-    { value: 'INDIVIDUAL_BIZ', label: '개인사업자' },
-    { value: 'CORPORATE', label: '법인사업자' },
-    { value: 'FOREIGNER', label: '외국인' },
 ];
 
 export default function CustomerInfoPage() {
@@ -34,9 +28,6 @@ export default function CustomerInfoPage() {
     const setApplicant = useApplicationStore((state) => state.setApplicant);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
 
-    const [customerType, setCustomerType] = React.useState<CustomerType>(
-        applicant?.customerType || 'PERSONAL'
-    );
     const [formData, setFormData] = React.useState<Partial<ApplicantInfo>>(
         applicant || {
             customerType: 'PERSONAL',
@@ -50,11 +41,6 @@ export default function CustomerInfoPage() {
     );
     const [errors, setErrors] = React.useState<Record<string, string>>({});
     const [showEmergencyPhone, setShowEmergencyPhone] = React.useState(false);
-
-    const handleCustomerTypeChange = (type: CustomerType) => {
-        setCustomerType(type);
-        setFormData({ ...formData, customerType: type });
-    };
 
     const handleInputChange = (field: string, value: string) => {
         if (field.startsWith('contact.')) {
@@ -72,9 +58,6 @@ export default function CustomerInfoPage() {
                 ...formData,
                 address: { ...formData.address!, [addressField]: value },
             });
-        } else if (field === 'businessRegNumber') {
-            value = formatBusinessNumber(value);
-            setFormData({ ...formData, [field]: value });
         } else if (field === 'birthDate') {
             value = formatBirthDate(value);
             setFormData({ ...formData, [field]: value });
@@ -118,22 +101,10 @@ export default function CustomerInfoPage() {
         if (!formData.contact?.phone || !validatePhoneNumber(formData.contact.phone)) {
             newErrors['contact.phone'] = '올바른 전화번호를 입력해주세요';
         }
-        if (!formData.email || !validateEmail(formData.email)) {
-            newErrors.email = '올바른 이메일을 입력해주세요';
-        }
         if (!formData.address?.zipcode || !formData.address?.basic) {
             newErrors['address.basic'] = '주소를 입력해주세요';
         }
 
-        // Business validation
-        if (customerType === 'INDIVIDUAL_BIZ' || customerType === 'CORPORATE') {
-            if (!formData.businessName) {
-                newErrors.businessName = '사업자명을 입력해주세요';
-            }
-            if (!formData.businessRegNumber || !validateBusinessNumber(formData.businessRegNumber)) {
-                newErrors.businessRegNumber = '올바른 사업자등록번호를 입력해주세요';
-            }
-        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -146,8 +117,6 @@ export default function CustomerInfoPage() {
             router.push('/apply/payment');
         }
     };
-
-    const isBusiness = customerType === 'INDIVIDUAL_BIZ' || customerType === 'CORPORATE';
 
     return (
         <div className="min-h-screen bg-white pb-32">
@@ -168,27 +137,6 @@ export default function CustomerInfoPage() {
                     </p>
                 </motion.div>
 
-                {/* Customer Type Selector */}
-                <div className="mb-6">
-                    <label className="block text-sm font-semibold text-text-primary mb-3">
-                        고객 구분
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                        {CUSTOMER_TYPES.map((type) => (
-                            <motion.button
-                                key={type.value}
-                                onClick={() => handleCustomerTypeChange(type.value as CustomerType)}
-                                className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${customerType === type.value
-                                    ? 'bg-primary text-white'
-                                    : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
-                                    }`}
-                                whileTap={{ scale: 0.97 }}
-                            >
-                                {type.label}
-                            </motion.button>
-                        ))}
-                    </div>
-                </div>
 
                 {/* Form Fields */}
                 <div className="space-y-5">
@@ -229,45 +177,6 @@ export default function CustomerInfoPage() {
                             ))}
                         </div>
                     </div>
-
-                    {/* Business Fields (conditional) */}
-                    <AnimatePresence>
-                        {isBusiness && (
-                            <>
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    <Input
-                                        label="사업자명"
-                                        conversational
-                                        value={formData.businessName || ''}
-                                        onChange={(value) => handleInputChange('businessName', value)}
-                                        error={errors.businessName}
-                                        placeholder="아정당컴퍼니"
-                                    />
-                                </motion.div>
-
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3, delay: 0.1 }}
-                                >
-                                    <Input
-                                        label="사업자등록번호"
-                                        conversational
-                                        value={formData.businessRegNumber || ''}
-                                        onChange={(value) => handleInputChange('businessRegNumber', value)}
-                                        error={errors.businessRegNumber}
-                                        placeholder="123-45-67890"
-                                    />
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
 
                     <Select
                         label="통신사를 선택해주세요"
@@ -310,16 +219,6 @@ export default function CustomerInfoPage() {
                             />
                         </motion.div>
                     )}
-
-                    <Input
-                        label="이메일 주소를 알려주세요"
-                        conversational
-                        type="email"
-                        value={formData.email || ''}
-                        onChange={(value) => handleInputChange('email', value)}
-                        error={errors.email}
-                        placeholder="example@email.com"
-                    />
 
                     {/* Address */}
                     <div className="animate-slide-in-up">

@@ -1,10 +1,10 @@
-export type CustomerType = 'PERSONAL' | 'INDIVIDUAL_BIZ' | 'CORPORATE' | 'FOREIGNER';
+export type CustomerType = 'PERSONAL';
 
 export type Gender = 'MALE' | 'FEMALE';
 
 export type PaymentMethod = 'BANK_TRANSFER' | 'CARD';
 
-export type Relationship = 'SELF' | 'SPOUSE' | 'FAMILY' | 'OTHER';
+export type Relationship = 'SELF';
 
 export type ResidentType = 'DOMESTIC' | 'FOREIGN';
 
@@ -63,10 +63,7 @@ export interface ApplicantInfo {
   name: string;
   birthDate: string;
   gender: Gender;
-  businessName?: string;
-  businessRegNumber?: string;
   contact: ContactInfo;
-  email: string;
   address: AddressInfo;
   referrerName?: string;
 }

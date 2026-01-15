@@ -16,9 +16,6 @@ import * as Checkbox from '@radix-ui/react-checkbox';
 
 const RELATIONSHIPS = [
     { value: 'SELF', label: '본인' },
-    { value: 'SPOUSE', label: '배우자' },
-    { value: 'FAMILY', label: '가족' },
-    { value: 'OTHER', label: '기타' },
 ];
 
 export default function PaymentPage() {
@@ -41,17 +38,6 @@ export default function PaymentPage() {
         setFormData({ ...formData, [field]: value });
         if (errors[field]) {
             setErrors({ ...errors, [field]: '' });
-        }
-    };
-
-    // Handle relationship change to autofill name for spouse
-    const handleRelationshipChange = (relationship: string) => {
-        handleInputChange('relationship', relationship);
-
-        // Auto-fill name for SPOUSE relationship
-        if (relationship === 'SPOUSE' && applicant) {
-            // For spouse, we can use a placeholder or leave empty for user to fill
-            // No auto-fill needed as we don't have spouse name in applicant data
         }
     };
 
@@ -171,33 +157,6 @@ export default function PaymentPage() {
                         </label>
                     </div>
 
-                    {/* Relationship */}
-                    <div className="animate-slide-in-up">
-                        <label className="label-conversational">납부자 관계</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            {RELATIONSHIPS.map((rel) => (
-                                <motion.button
-                                    key={rel.value}
-                                    onClick={() => handleRelationshipChange(rel.value)}
-                                    className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${formData.relationship === rel.value
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
-                                        }`}
-                                    whileTap={{ scale: 0.97 }}
-                                    disabled={formData.isSameAsApplicant}
-                                >
-                                    {rel.label}
-                                </motion.button>
-                            ))}
-                        </div>
-                        {formData.relationship === 'SPOUSE' && (
-                            <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                <p className="text-xs text-blue-900">
-                                    💡 배우자 명의의 계좌를 입력해주세요
-                                </p>
-                            </div>
-                        )}
-                    </div>
 
                     {/* Payment Method Selection */}
                     <div className="animate-slide-in-up">
