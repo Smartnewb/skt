@@ -6,14 +6,13 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useApplicationStore } from '@/store/useApplicationStore';
 import { Speed } from '@/types/application';
-import { getProductsByCondition, SPEED_INFO, calculateProduct } from '@/lib/productPricing';
+import { SPEED_INFO, calculateProduct } from '@/lib/productPricing';
 import { motion } from 'framer-motion';
 
 export default function SpeedSelectPage() {
     const router = useRouter();
     const selectedCategory = useApplicationStore((state) => state.selectedCategory);
     const selectedDiscountType = useApplicationStore((state) => state.selectedDiscountType);
-    const selectedTVType = useApplicationStore((state) => state.selectedTVType);
     const setProduct = useApplicationStore((state) => state.setProduct);
     const setSpeed = useApplicationStore((state) => state.setSpeed);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
@@ -25,36 +24,34 @@ export default function SpeedSelectPage() {
         if (!selectedCategory || !selectedDiscountType) {
             router.push('/');
         }
-        // For INTERNET_TV, also check if TV type is selected
-        if (selectedCategory === 'INTERNET_TV' && !selectedTVType) {
-            router.push('/apply/tv-select');
-        }
-    }, [selectedCategory, selectedDiscountType, selectedTVType, router]);
+    }, [selectedCategory, selectedDiscountType, router]);
 
     if (!selectedCategory || !selectedDiscountType) {
         return null;
     }
 
-    if (selectedCategory === 'INTERNET_TV' && !selectedTVType) {
-        return null;
-    }
-
-    const products = getProductsByCondition(selectedCategory, selectedDiscountType, selectedTVType);
     const speeds: Speed[] = ['100M', '500M', '1G'];
 
     const handleNext = () => {
         if (selectedSpeed) {
             setSpeed(selectedSpeed);
-            const finalProduct = calculateProduct(
-                selectedCategory,
-                selectedSpeed,
-                selectedDiscountType,
-                wifiRouter,
-                selectedTVType
-            );
-            setProduct(finalProduct);
-            setCurrentStep(4);
-            router.push('/apply/price-summary');
+            setCurrentStep(3);
+
+            // If INTERNET_TV, go to TV selection next
+            if (selectedCategory === 'INTERNET_TV') {
+                router.push('/apply/tv-select');
+            } else {
+                // For other categories, calculate final product and go to price summary
+                const finalProduct = calculateProduct(
+                    selectedCategory,
+                    selectedSpeed,
+                    selectedDiscountType,
+                    wifiRouter
+                );
+                setProduct(finalProduct);
+                setCurrentStep(4);
+                router.push('/apply/price-summary');
+            }
         }
     };
 
@@ -78,10 +75,7 @@ export default function SpeedSelectPage() {
             {/* Speed Cards */}
             <div className="px-6 space-y-4">
                 {speeds.map((speed, index) => {
-                    const product = products.find(p => p.speed === speed);
                     const speedInfo = SPEED_INFO[speed];
-
-                    if (!product) return null;
 
                     return (
                         <motion.div
@@ -93,7 +87,7 @@ export default function SpeedSelectPage() {
                             <Card
                                 selected={selectedSpeed === speed}
                                 onClick={() => setSelectedSpeed(speed)}
-                                badge={product.isBest ? '🔥 BEST' : speedInfo?.popular ? '⭐ 인기' : undefined}
+                                badge={speedInfo?.popular ? '⭐ 인기' : undefined}
                             >
                                 <div className="mb-3">
                                     <h3 className="text-2xl font-bold text-text-primary mb-1">

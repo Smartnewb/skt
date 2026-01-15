@@ -5,16 +5,17 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useApplicationStore } from '@/store/useApplicationStore';
-import { formatCurrency } from '@/lib/validation';
 import { TVType } from '@/types/application';
-import { TV_TYPE_INFO } from '@/lib/productPricing';
+import { TV_TYPE_INFO, calculateProduct } from '@/lib/productPricing';
 import { motion } from 'framer-motion';
 
 export default function TVSelectPage() {
     const router = useRouter();
     const selectedCategory = useApplicationStore((state) => state.selectedCategory);
     const selectedDiscountType = useApplicationStore((state) => state.selectedDiscountType);
+    const selectedSpeed = useApplicationStore((state) => state.selectedSpeed);
     const setTVType = useApplicationStore((state) => state.setTVType);
+    const setProduct = useApplicationStore((state) => state.setProduct);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
 
     const [selectedTVType, setSelectedTVTypeState] = React.useState<TVType | null>(null);
@@ -23,17 +24,30 @@ export default function TVSelectPage() {
         if (!selectedCategory || !selectedDiscountType) {
             router.push('/');
         }
-    }, [selectedCategory, selectedDiscountType, router]);
+        // If no speed selected, go back to speed selection
+        if (!selectedSpeed) {
+            router.push('/apply/speed-select');
+        }
+    }, [selectedCategory, selectedDiscountType, selectedSpeed, router]);
 
-    if (!selectedCategory || !selectedDiscountType) {
+    if (!selectedCategory || !selectedDiscountType || !selectedSpeed) {
         return null;
     }
 
     const handleNext = () => {
-        if (selectedTVType) {
+        if (selectedTVType && selectedSpeed) {
             setTVType(selectedTVType);
-            setCurrentStep(3);
-            router.push('/apply/speed-select');
+            // Calculate final product with speed and TV type
+            const finalProduct = calculateProduct(
+                selectedCategory,
+                selectedSpeed,
+                selectedDiscountType,
+                true, // wifiRouter default to true
+                selectedTVType
+            );
+            setProduct(finalProduct);
+            setCurrentStep(4);
+            router.push('/apply/price-summary');
         }
     };
 
@@ -100,7 +114,7 @@ export default function TVSelectPage() {
             {/* Info */}
             <div className="px-6 mt-6">
                 <p className="text-xs text-text-secondary text-center">
-                    * 다음 단계에서 인터넷 속도를 선택하실 수 있습니다
+                    * TV 상품을 선택하시면 가격 요약을 확인하실 수 있습니다
                 </p>
             </div>
 
