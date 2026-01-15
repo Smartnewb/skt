@@ -8,20 +8,20 @@ import { useConsultationStore } from '@/store/consultationStore';
 
 export default function ConsultationCompletePage() {
   const router = useRouter();
-  const { product, customerName, reset } = useConsultationStore();
+  const { customerName, reset } = useConsultationStore();
 
   useEffect(() => {
-    if (!product) {
+    if (!customerName) {
       router.push('/consultation');
     }
-  }, [product, router]);
+  }, [customerName, router]);
 
   const handleComplete = () => {
     reset();
     router.push('/');
   };
 
-  if (!product) {
+  if (!customerName) {
     return null;
   }
 

@@ -246,7 +246,7 @@ export default function PaymentPage() {
                                 label="계좌번호를 입력해주세요"
                                 conversational
                                 value={formData.accountNumber || ''}
-                                onChange={(e) => handleAccountNumberChange(e.target.value)}
+                                onChange={handleAccountNumberChange}
                                 error={errors.accountNumber}
                                 placeholder="숫자만 입력하세요" maxLength={20}
                             />
@@ -279,7 +279,7 @@ export default function PaymentPage() {
                                 label="카드번호를 입력해주세요"
                                 conversational
                                 value={formData.cardNumber || ''}
-                                onChange={(e) => handleInputChange('cardNumber', e.target.value)}
+                                onChange={(value) => handleInputChange('cardNumber', value)}
                                 error={errors.cardNumber}
                                 placeholder="1234-5678-9012-3456"
                             />
@@ -288,7 +288,7 @@ export default function PaymentPage() {
                                 label="유효기간"
                                 conversational
                                 value={formData.cardExpiry || ''}
-                                onChange={(e) => handleInputChange('cardExpiry', e.target.value)}
+                                onChange={(value) => handleInputChange('cardExpiry', value)}
                                 error={errors.cardExpiry}
                                 placeholder="MM/YY"
                             />
@@ -297,7 +297,7 @@ export default function PaymentPage() {
                                 label="생년월일 또는 사업자번호"
                                 conversational
                                 value={formData.cardBirthOrBizNumber || ''}
-                                onChange={(e) => handleInputChange('cardBirthOrBizNumber', e.target.value)}
+                                onChange={(value) => handleInputChange('cardBirthOrBizNumber', value)}
                                 error={errors.cardBirthOrBizNumber}
                                 placeholder="YYMMDD 또는 사업자번호"
                             />

@@ -196,7 +196,7 @@ export default function CustomerInfoPage() {
                         label="성함이 어떻게 되시나요?"
                         conversational
                         value={formData.name || ''}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        onChange={(value) => handleInputChange('name', value)}
                         error={errors.name}
                         placeholder="홍길동"
                     />
@@ -206,7 +206,7 @@ export default function CustomerInfoPage() {
                         conversational
                         type="text"
                         value={formData.birthDate || ''}
-                        onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                        onChange={(value) => handleInputChange('birthDate', value)}
                         error={errors.birthDate}
                         placeholder="1990-01-01"
                     />
@@ -244,7 +244,7 @@ export default function CustomerInfoPage() {
                                         label="사업자명"
                                         conversational
                                         value={formData.businessName || ''}
-                                        onChange={(e) => handleInputChange('businessName', e.target.value)}
+                                        onChange={(value) => handleInputChange('businessName', value)}
                                         error={errors.businessName}
                                         placeholder="아정당컴퍼니"
                                     />
@@ -260,7 +260,7 @@ export default function CustomerInfoPage() {
                                         label="사업자등록번호"
                                         conversational
                                         value={formData.businessRegNumber || ''}
-                                        onChange={(e) => handleInputChange('businessRegNumber', e.target.value)}
+                                        onChange={(value) => handleInputChange('businessRegNumber', value)}
                                         error={errors.businessRegNumber}
                                         placeholder="123-45-67890"
                                     />
@@ -282,7 +282,7 @@ export default function CustomerInfoPage() {
                         conversational
                         type="tel"
                         value={formData.contact?.phone || ''}
-                        onChange={(e) => handleInputChange('contact.phone', e.target.value)}
+                        onChange={(value) => handleInputChange('contact.phone', value)}
                         error={errors['contact.phone']}
                         placeholder="010-1234-5678"
                     />
@@ -305,7 +305,7 @@ export default function CustomerInfoPage() {
                                 label="비상연락처"
                                 type="tel"
                                 value={formData.contact?.emergencyPhone || ''}
-                                onChange={(e) => handleInputChange('contact.emergencyPhone', e.target.value)}
+                                onChange={(value) => handleInputChange('contact.emergencyPhone', value)}
                                 placeholder="010-5678-9012"
                             />
                         </motion.div>
@@ -316,7 +316,7 @@ export default function CustomerInfoPage() {
                         conversational
                         type="email"
                         value={formData.email || ''}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        onChange={(value) => handleInputChange('email', value)}
                         error={errors.email}
                         placeholder="example@email.com"
                     />
@@ -328,7 +328,7 @@ export default function CustomerInfoPage() {
                             <div className="flex gap-2">
                                 <Input
                                     value={formData.address?.zipcode || ''}
-                                    onChange={(e) => handleInputChange('address.zipcode', e.target.value)}
+                                    onChange={(value) => handleInputChange('address.zipcode', value)}
                                     placeholder="우편번호"
                                     disabled
                                     className="flex-1"
@@ -337,14 +337,14 @@ export default function CustomerInfoPage() {
                             </div>
                             <Input
                                 value={formData.address?.basic || ''}
-                                onChange={(e) => handleInputChange('address.basic', e.target.value)}
+                                onChange={(value) => handleInputChange('address.basic', value)}
                                 error={errors['address.basic']}
                                 placeholder="기본 주소"
                                 disabled
                             />
                             <Input
                                 value={formData.address?.detail || ''}
-                                onChange={(e) => handleInputChange('address.detail', e.target.value)}
+                                onChange={(value) => handleInputChange('address.detail', value)}
                                 placeholder="상세 주소 (동/호수)"
                             />
                         </div>
@@ -356,7 +356,7 @@ export default function CustomerInfoPage() {
                             label="추천인 명 (선택사항)"
                             conversational
                             value={formData.referrerName || ''}
-                            onChange={(e) => handleInputChange('referrerName', e.target.value)}
+                            onChange={(value) => handleInputChange('referrerName', value)}
                             placeholder="추천인이 있으시면 입력해주세요"
                         />
                         <p className="text-xs text-text-secondary mt-2">

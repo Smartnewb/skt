@@ -33,21 +33,17 @@ export function transformDbToConsultation(record: ConsultationDbRecord): Consult
   };
 }
 
-export async function createConsultation(data: ConsultationData): Promise<ConsultationDbRecord> {
+export async function createConsultation(data: ConsultationData): Promise<void> {
   const dbData = transformConsultationToDb(data);
 
-  const { data: result, error } = await supabase
+  const { error } = await supabase
     .from('consultations')
-    .insert(dbData)
-    .select()
-    .single();
+    .insert(dbData);
 
   if (error) {
     console.error('Failed to create consultation:', error);
     throw error;
   }
-
-  return result as ConsultationDbRecord;
 }
 
 export async function getConsultations(): Promise<ConsultationDbRecord[]> {

@@ -58,6 +58,7 @@ export default function ConsultationFormPage() {
 
     try {
       const consultationData = {
+        product: null,
         customerName,
         customerPhone,
         privacyConsent,
@@ -67,6 +68,7 @@ export default function ConsultationFormPage() {
       router.push('/consultation/complete');
     } catch (error) {
       console.error('Failed to submit consultation:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       alert('상담 신청에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);

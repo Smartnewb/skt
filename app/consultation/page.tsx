@@ -101,7 +101,7 @@ export default function ConsultationPricingPage() {
                 >
                   <div className="p-3 md:p-5">
                     {/* Product Header */}
-                    <div className="mb-3 md:mb-4">
+                    <div className="mb-2 md:mb-3">
                       <div className="flex items-center gap-1.5 md:gap-2 mb-1">
                         <h3 className="text-sm md:text-base font-bold leading-tight">
                           {BUNDLE_NAMES[bundle]}

@@ -210,7 +210,7 @@ export default function GiftPage() {
                         label="성함을 입력해주세요"
                         conversational
                         value={formData.name || ''}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        onChange={(value) => handleInputChange('name', value)}
                         error={errors.name}
                         placeholder="홍길동"
                     />
@@ -223,7 +223,7 @@ export default function GiftPage() {
                         }
                         conversational
                         value={formData.birthDateOrRegNumber || ''}
-                        onChange={(e) => handleInputChange('birthDateOrRegNumber', e.target.value)}
+                        onChange={(value) => handleInputChange('birthDateOrRegNumber', value)}
                         error={errors.birthDateOrRegNumber}
                         placeholder={formData.residentType === 'FOREIGN' ? '123456-1234567' : '1990-01-01'}
                     />
@@ -242,7 +242,7 @@ export default function GiftPage() {
                         label="계좌번호를 입력해주세요"
                         conversational
                         value={formData.accountNumber || ''}
-                        onChange={(e) => handleInputChange('accountNumber', e.target.value)}
+                        onChange={(value) => handleInputChange('accountNumber', value)}
                         error={errors.accountNumber}
                         placeholder="1234567890"
                     />

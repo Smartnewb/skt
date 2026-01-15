@@ -1,9 +1,10 @@
 import React from 'react';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
     label?: string;
     error?: string;
     conversational?: boolean;
+    onChange?: (value: string) => void;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -11,8 +12,13 @@ export const Input: React.FC<InputProps> = ({
     error,
     conversational = false,
     className = '',
+    onChange,
     ...props
 }) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onChange?.(e.target.value);
+    };
+
     return (
         <div className="w-full animate-slide-in-up">
             {label && (
@@ -24,6 +30,7 @@ export const Input: React.FC<InputProps> = ({
             )}
             <input
                 className={`input-field ${error ? 'border-error' : ''} ${className}`}
+                onChange={handleChange}
                 {...props}
             />
             {error && (
