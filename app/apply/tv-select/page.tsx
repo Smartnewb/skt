@@ -71,7 +71,7 @@ export default function TVSelectPage() {
                             <Card
                                 selected={selectedTVType === tvType}
                                 onClick={() => setSelectedTVTypeState(tvType)}
-                                badge={tvInfo.badge}
+                                badge={tvInfo.badge || undefined}
                             >
                                 <div className="flex justify-between items-start">
                                     <div className="flex-1">

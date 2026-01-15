@@ -214,7 +214,13 @@ export const SPEED_INFO = {
 };
 
 // TV Type metadata
-export const TV_TYPE_INFO = {
+export const TV_TYPE_INFO: Record<string, {
+    name: string;
+    channels: string;
+    description: string;
+    device: string;
+    badge?: string;
+}> = {
     'Economy': {
         name: 'BTV 이코노미',
         channels: '184ch',

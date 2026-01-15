@@ -97,9 +97,9 @@ export default function ApplicationDetailPage() {
     const priceTable = React.useMemo(() => {
         if (!application?.product?.category || !application?.product?.speed) return null;
         return PRICE_TABLES.find(
-            t => t.category === application.product.category &&
-                 t.speed === application.product.speed &&
-                 (application.product.category !== 'INTERNET_TV' || t.tvType === application.product.tvType)
+            t => t.category === application.product?.category &&
+                 t.speed === application.product?.speed &&
+                 (application.product?.category !== 'INTERNET_TV' || t.tvType === application.product?.tvType)
         );
     }, [application?.product]);
 
