@@ -349,6 +349,20 @@ export default function CustomerInfoPage() {
                             />
                         </div>
                     </div>
+
+                    {/* Referrer Name */}
+                    <div className="animate-slide-in-up">
+                        <Input
+                            label="추천인 명 (선택사항)"
+                            conversational
+                            value={formData.referrerName || ''}
+                            onChange={(e) => handleInputChange('referrerName', e.target.value)}
+                            placeholder="추천인이 있으시면 입력해주세요"
+                        />
+                        <p className="text-xs text-text-secondary mt-2">
+                            * 추천인 명을 입력하시면 추가 혜택을 받으실 수 있습니다
+                        </p>
+                    </div>
                 </div>
             </div>
 

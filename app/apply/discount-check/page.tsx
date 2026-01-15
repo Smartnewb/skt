@@ -24,7 +24,13 @@ export default function DiscountCheckPage() {
     const handleNext = (discountType: DiscountType) => {
         setDiscountType(discountType);
         setCurrentStep(2);
-        router.push('/apply/speed-select');
+
+        // If INTERNET_TV category, go to TV selection page first
+        if (selectedCategory === 'INTERNET_TV') {
+            router.push('/apply/tv-select');
+        } else {
+            router.push('/apply/speed-select');
+        }
     };
 
     // Step 1: Check for mobile combo

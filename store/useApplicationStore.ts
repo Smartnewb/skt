@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ApplicationData, ProductCategory, DiscountType } from '@/types/application';
+import { ApplicationData, ProductCategory, DiscountType, Speed, TVType } from '@/types/application';
 
 interface ApplicationStore extends ApplicationData {
     // Product selection state
     selectedCategory?: ProductCategory;
     selectedDiscountType?: DiscountType;
+    selectedSpeed?: Speed;
+    selectedTVType?: TVType;
 
     currentStep: number;
     agreements: any | null;
@@ -14,6 +16,8 @@ interface ApplicationStore extends ApplicationData {
     // New setters for category and discount
     setCategory: (category: ProductCategory) => void;
     setDiscountType: (discountType: DiscountType) => void;
+    setSpeed: (speed: Speed) => void;
+    setTVType: (tvType: TVType) => void;
 
     setProduct: (product: ApplicationData['product']) => void;
     setApplicant: (applicant: ApplicationData['applicant']) => void;
@@ -33,6 +37,8 @@ export const useApplicationStore = create<ApplicationStore>()(
             currentStep: 0,
             selectedCategory: undefined,
             selectedDiscountType: undefined,
+            selectedSpeed: undefined,
+            selectedTVType: undefined,
             product: undefined,
             applicant: undefined,
             payment: undefined,
@@ -49,6 +55,10 @@ export const useApplicationStore = create<ApplicationStore>()(
             setCategory: (selectedCategory) => set({ selectedCategory }),
 
             setDiscountType: (selectedDiscountType) => set({ selectedDiscountType }),
+
+            setSpeed: (selectedSpeed) => set({ selectedSpeed }),
+
+            setTVType: (selectedTVType) => set({ selectedTVType }),
 
             setProduct: (product) => set({ product }),
 
@@ -92,6 +102,8 @@ export const useApplicationStore = create<ApplicationStore>()(
                 currentStep: 0,
                 selectedCategory: undefined,
                 selectedDiscountType: undefined,
+                selectedSpeed: undefined,
+                selectedTVType: undefined,
                 product: undefined,
                 applicant: undefined,
                 payment: undefined,

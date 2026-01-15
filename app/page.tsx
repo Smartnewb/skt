@@ -22,7 +22,7 @@ export default function HomePage() {
     }
   };
 
-  const categories: ProductCategory[] = ['INTERNET_TV', 'INTERNET_ONLY', 'INTERNET_PHONE'];
+  const categories: ProductCategory[] = ['INTERNET_TV', 'INTERNET_ONLY'];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-32">

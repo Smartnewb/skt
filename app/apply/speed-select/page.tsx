@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useApplicationStore } from '@/store/useApplicationStore';
-import { formatCurrency } from '@/lib/validation';
 import { Speed } from '@/types/application';
 import { getProductsByCondition, SPEED_INFO, calculateProduct } from '@/lib/productPricing';
 import { motion } from 'framer-motion';
@@ -14,44 +13,50 @@ export default function SpeedSelectPage() {
     const router = useRouter();
     const selectedCategory = useApplicationStore((state) => state.selectedCategory);
     const selectedDiscountType = useApplicationStore((state) => state.selectedDiscountType);
+    const selectedTVType = useApplicationStore((state) => state.selectedTVType);
     const setProduct = useApplicationStore((state) => state.setProduct);
+    const setSpeed = useApplicationStore((state) => state.setSpeed);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
 
     const [selectedSpeed, setSelectedSpeed] = React.useState<Speed | null>(null);
-    const [wifiRouter, setWifiRouter] = React.useState(true); // Default checked
+    const [wifiRouter, setWifiRouter] = React.useState(true);
 
     React.useEffect(() => {
         if (!selectedCategory || !selectedDiscountType) {
             router.push('/');
         }
-    }, [selectedCategory, selectedDiscountType, router]);
+        // For INTERNET_TV, also check if TV type is selected
+        if (selectedCategory === 'INTERNET_TV' && !selectedTVType) {
+            router.push('/apply/tv-select');
+        }
+    }, [selectedCategory, selectedDiscountType, selectedTVType, router]);
 
     if (!selectedCategory || !selectedDiscountType) {
         return null;
     }
 
-    const products = getProductsByCondition(selectedCategory, selectedDiscountType);
+    if (selectedCategory === 'INTERNET_TV' && !selectedTVType) {
+        return null;
+    }
+
+    const products = getProductsByCondition(selectedCategory, selectedDiscountType, selectedTVType);
     const speeds: Speed[] = ['100M', '500M', '1G'];
 
     const handleNext = () => {
         if (selectedSpeed) {
+            setSpeed(selectedSpeed);
             const finalProduct = calculateProduct(
                 selectedCategory,
                 selectedSpeed,
                 selectedDiscountType,
-                wifiRouter
+                wifiRouter,
+                selectedTVType
             );
             setProduct(finalProduct);
-            setCurrentStep(3);
-            router.push('/apply/customer-info');
+            setCurrentStep(4);
+            router.push('/apply/price-summary');
         }
     };
-
-    const selectedProduct = selectedSpeed
-        ? calculateProduct(selectedCategory, selectedSpeed, selectedDiscountType, wifiRouter)
-        : null;
-
-    const totalPrice = selectedProduct ? selectedProduct.monthlyPrice : 0;
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white pb-32">
@@ -90,32 +95,14 @@ export default function SpeedSelectPage() {
                                 onClick={() => setSelectedSpeed(speed)}
                                 badge={product.isBest ? '🔥 BEST' : speedInfo?.popular ? '⭐ 인기' : undefined}
                             >
-                                <div className="flex justify-between items-start mb-3">
-                                    <div>
-                                        <h3 className="text-2xl font-bold text-text-primary mb-1">
-                                            {speedInfo.name}
-                                        </h3>
-                                        <p className="text-sm text-text-secondary">{speedInfo.subtitle}</p>
-                                        <p className="text-xs text-text-secondary mt-1">{speedInfo.description}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-xs text-text-secondary mb-1">월</div>
-                                        <div className="text-xl font-bold text-text-primary">
-                                            {formatCurrency(product.monthlyPrice)}
-                                        </div>
-                                    </div>
+                                <div className="mb-3">
+                                    <h3 className="text-2xl font-bold text-text-primary mb-1">
+                                        {speedInfo.name}
+                                    </h3>
+                                    <p className="text-sm text-text-secondary">{speedInfo.subtitle}</p>
+                                    <p className="text-xs text-text-secondary mt-1">{speedInfo.description}</p>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-blue-100 to-blue-50 rounded-lg p-4 border border-blue-200">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-blue-900">
-                                            신세계상품권 13만 원 + 현금
-                                        </span>
-                                        <span className="text-2xl font-bold text-blue-600">
-                                            {formatCurrency(product.cashBenefit)}
-                                        </span>
-                                    </div>
-                                </div>
                             </Card>
                         </motion.div>
                     );
@@ -177,7 +164,7 @@ export default function SpeedSelectPage() {
                     transition={{ duration: 0.3 }}
                 >
                     <Button onClick={handleNext}>
-                        다음 ({formatCurrency(totalPrice)})
+                        다음
                     </Button>
                 </motion.div>
             )}

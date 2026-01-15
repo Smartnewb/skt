@@ -28,6 +28,7 @@ export function transformApplicationToDb(data: ApplicationData) {
         applicant_zipcode: data.applicant?.address.zipcode,
         applicant_address_basic: data.applicant?.address.basic,
         applicant_address_detail: data.applicant?.address.detail,
+        applicant_referrer_name: data.applicant?.referrerName,
 
         // Payment
         payment_is_same_as_applicant: data.payment?.isSameAsApplicant,
@@ -90,6 +91,7 @@ export function transformDbToApplication(dbRecord: any): ApplicationData & { id:
                 basic: dbRecord.applicant_address_basic,
                 detail: dbRecord.applicant_address_detail,
             },
+            referrerName: dbRecord.applicant_referrer_name,
         },
         payment: {
             isSameAsApplicant: dbRecord.payment_is_same_as_applicant,

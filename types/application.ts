@@ -12,6 +12,7 @@ export type ResidentType = 'DOMESTIC' | 'FOREIGN';
 export type ProductCategory = 'INTERNET_ONLY' | 'INTERNET_PHONE' | 'INTERNET_TV';
 export type Speed = '100M' | '500M' | '1G';
 export type DiscountType = 'GENERAL' | 'MOBILE_COMBO' | 'FAMILY_COMBO';
+export type TVType = 'Economy' | 'Standard' | 'ALL';
 
 export interface ProductInfo {
   id: string;
@@ -67,6 +68,7 @@ export interface ApplicantInfo {
   contact: ContactInfo;
   email: string;
   address: AddressInfo;
+  referrerName?: string;
 }
 
 export interface PaymentInfo {

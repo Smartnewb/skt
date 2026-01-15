@@ -66,7 +66,42 @@ export const PRICE_TABLES: PriceTable[] = [
         }
     },
 
-    // ========== 인터넷 + BTV (주력 상품) ==========
+    // ========== 인터넷 + BTV 이코노미 (184ch) ==========
+    {
+        category: 'INTERNET_TV',
+        speed: '100M',
+        tvType: 'Economy',
+        cashBenefit: 430000,
+        prices: {
+            general: 34100,
+            mobileCombo: 30800,
+            familyCombo: 30800
+        }
+    },
+    {
+        category: 'INTERNET_TV',
+        speed: '500M',
+        tvType: 'Economy',
+        cashBenefit: 480000,
+        prices: {
+            general: 41800,
+            mobileCombo: 35200,
+            familyCombo: 36300
+        }
+    },
+    {
+        category: 'INTERNET_TV',
+        speed: '1G',
+        tvType: 'Economy',
+        cashBenefit: 480000,
+        prices: {
+            general: 47300,
+            mobileCombo: 38500,
+            familyCombo: 41800
+        }
+    },
+
+    // ========== 인터넷 + BTV 스탠다드 (235ch) 🔥 강추 ==========
     {
         category: 'INTERNET_TV',
         speed: '100M',
@@ -85,7 +120,7 @@ export const PRICE_TABLES: PriceTable[] = [
         cashBenefit: 480000,
         prices: {
             general: 45100,
-            mobileCombo: 38500, // ★ BEST SELLER
+            mobileCombo: 38500,
             familyCombo: 39600
         }
     },
@@ -98,6 +133,41 @@ export const PRICE_TABLES: PriceTable[] = [
             general: 50600,
             mobileCombo: 41800,
             familyCombo: 45100
+        }
+    },
+
+    // ========== 인터넷 + BTV ALL (261ch) ==========
+    {
+        category: 'INTERNET_TV',
+        speed: '100M',
+        tvType: 'ALL',
+        cashBenefit: 430000,
+        prices: {
+            general: 40700,
+            mobileCombo: 37400,
+            familyCombo: 37400
+        }
+    },
+    {
+        category: 'INTERNET_TV',
+        speed: '500M',
+        tvType: 'ALL',
+        cashBenefit: 480000,
+        prices: {
+            general: 48400,
+            mobileCombo: 41800,
+            familyCombo: 42900
+        }
+    },
+    {
+        category: 'INTERNET_TV',
+        speed: '1G',
+        tvType: 'ALL',
+        cashBenefit: 480000,
+        prices: {
+            general: 53900,
+            mobileCombo: 45100,
+            familyCombo: 48400
         }
     },
 ];
@@ -143,19 +213,45 @@ export const SPEED_INFO = {
     }
 };
 
+// TV Type metadata
+export const TV_TYPE_INFO = {
+    'Economy': {
+        name: 'BTV 이코노미',
+        channels: '184ch',
+        description: '기본 채널 구성',
+        device: '스마트3 셋탑'
+    },
+    'Standard': {
+        name: 'BTV 스탠다드',
+        channels: '235ch',
+        description: '인기 채널 추가 구성',
+        device: '스마트3 셋탑',
+        badge: '🔥 강추'
+    },
+    'ALL': {
+        name: 'BTV ALL',
+        channels: '261ch',
+        description: '모든 채널 시청 가능',
+        device: '스마트3 셋탑',
+        badge: '🏷️ HIT'
+    }
+};
+
 // Calculate final product based on selections
 export function calculateProduct(
     category: ProductCategory,
     speed: Speed,
     discountType: DiscountType,
-    wifiRouter: boolean = false
+    wifiRouter: boolean = false,
+    tvType?: string
 ): ProductInfo {
     const table = PRICE_TABLES.find(
-        t => t.category === category && t.speed === speed
+        t => t.category === category && t.speed === speed &&
+        (category !== 'INTERNET_TV' || t.tvType === tvType)
     );
 
     if (!table) {
-        throw new Error(`Invalid product combination: ${category} ${speed}`);
+        throw new Error(`Invalid product combination: ${category} ${speed} ${tvType || ''}`);
     }
 
     // Get price based on discount type
@@ -171,6 +267,7 @@ export function calculateProduct(
     // Determine if this is a BEST option
     const isBest = category === 'INTERNET_TV' &&
         speed === '500M' &&
+        tvType === 'Standard' &&
         discountType === 'MOBILE_COMBO';
 
     // Generate description
@@ -179,7 +276,7 @@ export function calculateProduct(
     const description = `${categoryName} ${speedName}`;
 
     return {
-        id: `${category}_${speed}_${discountType}`,
+        id: `${category}_${speed}_${tvType || ''}_${discountType}`,
         category,
         speed,
         tvType: table.tvType,
@@ -195,13 +292,14 @@ export function calculateProduct(
 // Get all products for a specific category and discount type
 export function getProductsByCondition(
     category: ProductCategory,
-    discountType: DiscountType
+    discountType: DiscountType,
+    tvType?: string
 ): ProductInfo[] {
     const speeds: Speed[] = ['100M', '500M', '1G'];
-    return speeds.map(speed => calculateProduct(category, speed, discountType));
+    return speeds.map(speed => calculateProduct(category, speed, discountType, false, tvType));
 }
 
 // Legacy support - keep old PRODUCTS for backward compatibility
-export const PRODUCTS = getProductsByCondition('INTERNET_TV', 'MOBILE_COMBO');
+export const PRODUCTS = getProductsByCondition('INTERNET_TV', 'MOBILE_COMBO', 'Standard');
 
 // Other existing data...
