@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useConsultationStore } from '@/store/consultationStore';
-import { createConsultation } from '@/lib/consultationDatabase';
 import { formatPhoneNumber } from '@/lib/validation';
 
 export default function ConsultationFormPage() {
@@ -58,18 +57,29 @@ export default function ConsultationFormPage() {
 
     try {
       const consultationData = {
-        product: null,
         customerName,
         customerPhone,
         privacyConsent,
+        product: null,
       };
 
-      await createConsultation(consultationData);
+      const response = await fetch('/api/consultations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(consultationData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '상담 신청에 실패했습니다');
+      }
+
       router.push('/consultation/complete');
     } catch (error) {
       console.error('Failed to submit consultation:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      alert('상담 신청에 실패했습니다. 다시 시도해주세요.');
+      alert(error instanceof Error ? error.message : '상담 신청에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }

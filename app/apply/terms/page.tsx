@@ -15,12 +15,20 @@ export default function TermsPage() {
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
     const storedAgreements = useApplicationStore((state) => state.agreements);
     const setAgreements = useApplicationStore((state) => state.setAgreements);
+    const applicationData = useApplicationStore((state) => ({
+        product: state.product,
+        applicant: state.applicant,
+        payment: state.payment,
+        giftRecipient: state.giftRecipient,
+        agreements: state.agreements,
+    }));
 
     const [agreements, setLocalAgreements] = React.useState<AgreementState>(
         storedAgreements || getInitialAgreementState()
     );
     const [selectedTerm, setSelectedTerm] = React.useState<typeof TERMS[number] | null>(null);
     const [isBottomSheetOpen, setIsBottomSheetOpen] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const allAgreed = areAllAgreed(agreements);
     const canProceed = areAllRequiredAgreed(agreements);
@@ -56,11 +64,39 @@ export default function TermsPage() {
     };
 
     // Handle next button
-    const handleNext = () => {
-        if (canProceed) {
+    const handleNext = async () => {
+        if (!canProceed) return;
+
+        setIsSubmitting(true);
+
+        try {
             setAgreements(agreements);
+
+            const fullApplicationData = {
+                ...applicationData,
+                agreements,
+            };
+
+            const response = await fetch('/api/applications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(fullApplicationData),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '가입 신청에 실패했습니다');
+            }
+
             setCurrentStep(5);
             router.push('/apply/complete');
+        } catch (error) {
+            console.error('Failed to submit application:', error);
+            alert(error instanceof Error ? error.message : '가입 신청에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -219,9 +255,9 @@ export default function TermsPage() {
             <div className="sticky-bottom">
                 <Button
                     onClick={handleNext}
-                    disabled={!canProceed}
+                    disabled={!canProceed || isSubmitting}
                 >
-                    다음
+                    {isSubmitting ? '신청 중...' : '다음'}
                 </Button>
             </div>
         </div>
