@@ -26,15 +26,13 @@ CREATE TABLE IF NOT EXISTS applications (
   applicant_address_detail TEXT,
   
   -- Payment Info
-  payment_is_same_as_applicant BOOLEAN,
-  payment_relationship TEXT,
   payment_method TEXT,
   payment_bank_code TEXT,
   payment_account_number TEXT,
   payment_card_company TEXT,
   payment_card_number TEXT,
   payment_card_expiry TEXT,
-  payment_card_birth_or_biz_number TEXT,
+  payment_card_birth_date TEXT,
   
   -- Gift Recipient Info
   gift_relationship TEXT,
