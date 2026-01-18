@@ -19,8 +19,6 @@ export function transformApplicationToDb(data: ApplicationData) {
         applicant_name: data.applicant?.name,
         applicant_birth_date: data.applicant?.birthDate,
         applicant_gender: data.applicant?.gender,
-        applicant_business_name: data.applicant?.businessName,
-        applicant_business_reg_number: data.applicant?.businessRegNumber,
         applicant_carrier: data.applicant?.contact.carrier,
         applicant_phone: data.applicant?.contact.phone,
         applicant_emergency_phone: data.applicant?.contact.emergencyPhone,
@@ -31,15 +29,13 @@ export function transformApplicationToDb(data: ApplicationData) {
         applicant_referrer_name: data.applicant?.referrerName,
 
         // Payment
-        payment_is_same_as_applicant: data.payment?.isSameAsApplicant,
-        payment_relationship: data.payment?.relationship,
         payment_method: data.payment?.method,
         payment_bank_code: data.payment?.bankCode,
         payment_account_number: data.payment?.accountNumber,
         payment_card_company: data.payment?.cardCompany,
         payment_card_number: data.payment?.cardNumber,
         payment_card_expiry: data.payment?.cardExpiry,
-        payment_card_birth_or_biz_number: data.payment?.cardBirthOrBizNumber,
+        payment_card_birth_date: data.payment?.cardBirthDate,
 
         // Gift
         gift_relationship: data.giftRecipient?.relationship,
@@ -78,8 +74,6 @@ export function transformDbToApplication(dbRecord: any): ApplicationData & { id:
             name: dbRecord.applicant_name,
             birthDate: dbRecord.applicant_birth_date,
             gender: dbRecord.applicant_gender,
-            businessName: dbRecord.applicant_business_name,
-            businessRegNumber: dbRecord.applicant_business_reg_number,
             contact: {
                 carrier: dbRecord.applicant_carrier,
                 phone: dbRecord.applicant_phone,
@@ -94,15 +88,13 @@ export function transformDbToApplication(dbRecord: any): ApplicationData & { id:
             referrerName: dbRecord.applicant_referrer_name,
         },
         payment: {
-            isSameAsApplicant: dbRecord.payment_is_same_as_applicant,
-            relationship: dbRecord.payment_relationship,
             method: dbRecord.payment_method,
             bankCode: dbRecord.payment_bank_code,
             accountNumber: dbRecord.payment_account_number,
             cardCompany: dbRecord.payment_card_company,
             cardNumber: dbRecord.payment_card_number,
             cardExpiry: dbRecord.payment_card_expiry,
-            cardBirthOrBizNumber: dbRecord.payment_card_birth_or_biz_number,
+            cardBirthDate: dbRecord.payment_card_birth_date,
         },
         giftRecipient: {
             relationship: dbRecord.gift_relationship,

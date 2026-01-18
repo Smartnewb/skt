@@ -65,19 +65,18 @@ export interface ApplicantInfo {
   gender: Gender;
   contact: ContactInfo;
   address: AddressInfo;
+  email?: string;
   referrerName?: string;
 }
 
 export interface PaymentInfo {
-  isSameAsApplicant: boolean;
-  relationship: Relationship;
   method: PaymentMethod;
   bankCode?: string;
   accountNumber?: string;
   cardCompany?: string;
   cardNumber?: string;
   cardExpiry?: string;
-  cardBirthOrBizNumber?: string;
+  cardBirthDate?: string;
 }
 
 export interface GiftRecipientInfo {

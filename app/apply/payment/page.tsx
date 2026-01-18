@@ -7,28 +7,20 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useApplicationStore } from '@/store/useApplicationStore';
-import { PaymentMethod, Relationship, PaymentInfo } from '@/types/application';
+import { PaymentMethod, PaymentInfo } from '@/types/application';
 import { BANKS, CARD_COMPANIES } from '@/lib/mockData';
 import { validateAccountNumber, validateCardNumber, validateCardExpiry } from '@/lib/validation';
 import { formatAccountNumber, validateAccountFormat } from '@/lib/bankFormats';
 import { motion } from 'framer-motion';
-import * as Checkbox from '@radix-ui/react-checkbox';
-
-const RELATIONSHIPS = [
-    { value: 'SELF', label: '본인' },
-];
 
 export default function PaymentPage() {
     const router = useRouter();
-    const applicant = useApplicationStore((state) => state.applicant);
     const payment = useApplicationStore((state) => state.payment);
     const setPayment = useApplicationStore((state) => state.setPayment);
     const setCurrentStep = useApplicationStore((state) => state.setCurrentStep);
 
     const [formData, setFormData] = React.useState<Partial<PaymentInfo>>(
         payment || {
-            isSameAsApplicant: false,
-            relationship: 'SELF',
             method: 'BANK_TRANSFER',
         }
     );
@@ -38,18 +30,6 @@ export default function PaymentPage() {
         setFormData({ ...formData, [field]: value });
         if (errors[field]) {
             setErrors({ ...errors, [field]: '' });
-        }
-    };
-
-    const handleSameAsApplicantChange = (checked: boolean) => {
-        if (checked && applicant) {
-            setFormData({
-                ...formData,
-                isSameAsApplicant: true,
-                relationship: 'SELF',
-            });
-        } else {
-            setFormData({ ...formData, isSameAsApplicant: false });
         }
     };
 
@@ -93,8 +73,8 @@ export default function PaymentPage() {
             if (!formData.cardExpiry || !validateCardExpiry(formData.cardExpiry)) {
                 newErrors.cardExpiry = '유효기간을 MM/YY 형식으로 입력해주세요';
             }
-            if (!formData.cardBirthOrBizNumber) {
-                newErrors.cardBirthOrBizNumber = '생년월일 또는 사업자번호를 입력해주세요';
+            if (!formData.cardBirthDate) {
+                newErrors.cardBirthDate = '생년월일을 입력해주세요';
             }
         }
 
@@ -129,35 +109,6 @@ export default function PaymentPage() {
                 </motion.div>
 
                 <div className="space-y-6">
-                    {/* Same as Applicant Checkbox */}
-                    <div className="flex items-center space-x-3 bg-gray-50 p-4 rounded-xl">
-                        <Checkbox.Root
-                            className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center bg-white data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            checked={formData.isSameAsApplicant}
-                            onCheckedChange={handleSameAsApplicantChange}
-                        >
-                            <Checkbox.Indicator>
-                                <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
-                            </Checkbox.Indicator>
-                        </Checkbox.Root>
-                        <label className="text-sm font-semibold text-text-primary">
-                            가입자 정보와 동일합니다
-                        </label>
-                    </div>
-
-
                     {/* Payment Method Selection */}
                     <div className="animate-slide-in-up">
                         <label className="label-conversational">납부 방식</label>
@@ -253,12 +204,12 @@ export default function PaymentPage() {
                             />
 
                             <Input
-                                label="생년월일 또는 사업자번호"
+                                label="생년월일"
                                 conversational
-                                value={formData.cardBirthOrBizNumber || ''}
-                                onChange={(value) => handleInputChange('cardBirthOrBizNumber', value)}
-                                error={errors.cardBirthOrBizNumber}
-                                placeholder="YYMMDD 또는 사업자번호"
+                                value={formData.cardBirthDate || ''}
+                                onChange={(value) => handleInputChange('cardBirthDate', value)}
+                                error={errors.cardBirthDate}
+                                placeholder="YYMMDD"
                             />
                         </motion.div>
                     )}
