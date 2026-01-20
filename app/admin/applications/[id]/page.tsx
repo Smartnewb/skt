@@ -35,7 +35,12 @@ function generateApplicationSummary(
     const lines: string[] = [];
 
     lines.push(`1. 성명: ${applicant?.name || '-'}`);
-    lines.push(`2. 주민번호: ${applicant?.birthDate || '-'}`);
+    // 생년월일을 주민번호 앞자리 형식으로 변환 (1979-11-07 → 791107)
+    const birthDate = applicant?.birthDate;
+    const formattedBirthDate = birthDate
+        ? birthDate.replace(/^\d{2}(\d{2})-(\d{2})-(\d{2})$/, '$1$2$3')
+        : '-';
+    lines.push(`2. 주민번호: ${formattedBirthDate}`);
     const carrier = applicant?.contact?.carrier || '';
     const phone = applicant?.contact?.phone || '-';
     const carrierPrefix = carrier ? '(' + carrier + ') ' : '';
@@ -78,8 +83,10 @@ function generateApplicationSummary(
     }
     lines.push(`8. ${discountType}`);
 
-    lines.push(`9. 사은품: 신세계상품권 ${giftRecipient?.giftCardOption || '0원'}, 현금 ${product?.cashBenefit?.toLocaleString() || '0'}원`);
-    lines.push(`10. 설치비: 면제`);
+    const cashAmount = (product?.cashBenefit || 0) - 130000;
+    lines.push(`9. 사은품: 신세계상품권 13만원, 현금 ${cashAmount.toLocaleString()}원`);
+    const installationFee = product?.category === 'INTERNET_TV' ? '56,100원' : '36,300원';
+    lines.push(`10. 설치비: ${installationFee} [부가세포함]`);
     lines.push(`11. 설치일정: `);
 
     return lines.join('\n');
