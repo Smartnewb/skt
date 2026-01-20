@@ -14,6 +14,11 @@ const DISCOUNT_TYPE_LABELS = {
     FAMILY_COMBO: '패밀리 결합'
 };
 
+const INSTALLATION_FEE = {
+    INTERNET_ONLY: 36300,
+    INTERNET_TV: 56100,
+};
+
 export default function PriceSummaryPage() {
     const router = useRouter();
     const product = useApplicationStore((state) => state.product);
@@ -162,6 +167,17 @@ export default function PriceSummaryPage() {
                                     {formatCurrency(product.monthlyPrice)}
                                 </span>
                             </div>
+
+                            {/* 설치비 */}
+                            <div className="flex justify-between items-center mt-4 pt-4 border-t border-dashed border-gray-300">
+                                <span className="text-sm text-text-secondary">🔧 설치비</span>
+                                <div className="text-right">
+                                    <span className="font-semibold">
+                                        {formatCurrency(selectedCategory === 'INTERNET_TV' ? INSTALLATION_FEE.INTERNET_TV : INSTALLATION_FEE.INTERNET_ONLY)}
+                                    </span>
+                                    <span className="text-xs text-text-secondary ml-1">[부가세포함]</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
@@ -179,7 +195,7 @@ export default function PriceSummaryPage() {
                             {formatCurrency(product.cashBenefit)}
                         </div>
                         <div className="text-xs opacity-90">
-                            신세계상품권 13만원 + 현금 (당일 지급 조건)
+                            신세계 상품권 13만원 + 현금 {formatCurrency(product.cashBenefit - 130000)} (당일 지급 조건)
                         </div>
                     </div>
                 </motion.div>

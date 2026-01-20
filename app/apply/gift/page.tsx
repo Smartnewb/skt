@@ -8,7 +8,7 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useApplicationStore } from '@/store/useApplicationStore';
 import { GiftRecipientInfo } from '@/types/application';
-import { BANKS, GIFT_CARD_OPTIONS } from '@/lib/mockData';
+import { BANKS } from '@/lib/mockData';
 import { validateAccountNumber } from '@/lib/validation';
 import { formatAccountNumber, validateAccountFormat } from '@/lib/bankFormats';
 import { motion } from 'framer-motion';
@@ -33,7 +33,7 @@ export default function GiftPage() {
             birthDateOrRegNumber: '',
             bankCode: '',
             accountNumber: '',
-            giftCardOption: 'NONE',
+            giftCardOption: 'SHINSEGAE_CASH',
         }
     );
     const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -167,13 +167,13 @@ export default function GiftPage() {
                         placeholder="1234567890"
                     />
 
-                    {/* Gift Card Option */}
-                    <Select
-                        label="상품권 옵션 (선택)"
-                        value={formData.giftCardOption || 'NONE'}
-                        onChange={(e) => handleInputChange('giftCardOption', e.target.value)}
-                        options={GIFT_CARD_OPTIONS.map((g) => ({ value: g.code, label: g.name }))}
-                    />
+                    {/* Gift Card Option - Fixed */}
+                    <div className="bg-gray-50 rounded-xl p-4">
+                        <p className="text-sm text-text-secondary mb-1">상품권 옵션</p>
+                        <p className="text-base font-semibold text-text-primary">
+                            🎁 신세계 상품권 13만원 + 현금
+                        </p>
+                    </div>
 
                     {/* Notice */}
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">

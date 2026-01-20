@@ -23,9 +23,7 @@ export const CARRIERS = [
 ];
 
 export const GIFT_CARD_OPTIONS = [
-    { code: 'NONE', name: '전액 현금' },
-    { code: 'SHINSEGAE', name: '신세계 상품권' },
-    { code: 'HOMEPLUS', name: '홈플러스 상품권' },
+    { code: 'SHINSEGAE_CASH', name: '신세계 상품권 13만원 + 현금' },
 ];
 
 export const CARD_COMPANIES = [

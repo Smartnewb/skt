@@ -36,7 +36,10 @@ function generateApplicationSummary(
 
     lines.push(`1. 성명: ${applicant?.name || '-'}`);
     lines.push(`2. 주민번호: ${applicant?.birthDate || '-'}`);
-    lines.push(`3. 연락처: ${applicant?.contact?.phone || '-'}`);
+    const carrier = applicant?.contact?.carrier || '';
+    const phone = applicant?.contact?.phone || '-';
+    const carrierPrefix = carrier ? '(' + carrier + ') ' : '';
+    lines.push(`3. 연락처: ${carrierPrefix}${phone}`);
     lines.push(`4. 주소: ${applicant?.address?.basic || ''} ${applicant?.address?.detail || ''}`);
 
     // Payment method
@@ -280,10 +283,10 @@ export default function ApplicationDetailPage() {
                                 <span className="text-sm text-gray-600">연락처</span>
                                 <CopyButton text={applicant?.contact?.phone || '-'} />
                             </div>
-                            </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-100">
                                 <span className="text-sm text-gray-600">통신사</span>
-                                <span className="text-sm font-medium">{applicant?.contact?.carrier || "-"}</span>
+                                <span className="text-sm font-medium">{applicant?.contact?.carrier || '-'}</span>
+                            </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-100">
                                 <span className="text-sm text-gray-600">주소</span>
                                 <CopyButton
@@ -362,13 +365,25 @@ export default function ApplicationDetailPage() {
                                         {formatCurrency(product?.monthlyPrice || 0)}
                                     </span>
                                 </div>
+                                <div className="flex justify-between items-center mt-3 pt-3 border-t border-dashed border-gray-300">
+                                    <span className="text-sm text-gray-600">🔧 설치비</span>
+                                    <span className="text-sm font-semibold">
+                                        {formatCurrency(product?.category === 'INTERNET_TV' ? 56100 : 36300)}
+                                        <span className="text-xs text-gray-500 ml-1">[부가세포함]</span>
+                                    </span>
+                                </div>
                             </div>
 
-                            <div className="flex items-center justify-between py-2 bg-primary/10 -mx-6 px-6 mt-4 rounded-b-lg">
-                                <span className="text-sm text-primary font-medium">사은품</span>
-                                <span className="text-lg font-bold text-primary">
-                                    {formatCurrency(product?.cashBenefit || 0)}
-                                </span>
+                            <div className="bg-primary/10 -mx-6 px-6 py-3 mt-4 rounded-b-lg">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-primary font-medium">사은품</span>
+                                    <span className="text-lg font-bold text-primary">
+                                        {formatCurrency(product?.cashBenefit || 0)}
+                                    </span>
+                                </div>
+                                <div className="text-xs text-primary/80 text-right mt-1">
+                                    신세계 상품권 13만원 + 현금 {formatCurrency((product?.cashBenefit || 0) - 130000)}
+                                </div>
                             </div>
                         </div>
                     </motion.div>
