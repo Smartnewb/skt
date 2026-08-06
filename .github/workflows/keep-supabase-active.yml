@@ -2,19 +2,89 @@ name: Keep Supabase Active
 
 on:
   schedule:
-    # Supabase free projects can pause after 1 week of inactivity.
-    # Run three times a week and avoid the top of the hour, where GitHub
-    # scheduled workflows are more likely to be delayed or dropped.
-    - cron: '17 1 * * 1,3,5'
+    # Free-tier projects can pause after ~7 days without DB activity.
+    # Ping twice daily (off-hour minutes reduce GitHub schedule contention).
+    # 02:23 UTC ≈ 11:23 KST, 14:41 UTC ≈ 23:41 KST
+    - cron: '23 2 * * *'
+    - cron: '41 14 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - name: Ping Supabase health endpoint
+        id: ping
         run: |
-          curl --fail-with-body --show-error --silent \
-            --retry 3 --retry-delay 10 --retry-all-errors \
-            https://skt-bay.vercel.app/api/health/supabase
+          set -euo pipefail
+          URL="https://skt-bay.vercel.app/api/health/supabase"
+          MAX_ATTEMPTS=8
+          DELAY=15
+          attempt=1
+
+          while [ "${attempt}" -le "${MAX_ATTEMPTS}" ]; do
+            echo "Attempt ${attempt}/${MAX_ATTEMPTS} -> ${URL}"
+            body_file="$(mktemp)"
+            http_code="$(curl --show-error --silent --max-time 30 --output "${body_file}" --write-out '%{http_code}' "${URL}" || true)"
+            echo "HTTP ${http_code}"
+            cat "${body_file}" || true
+            echo
+
+            if [ "${http_code}" = "200" ] && grep -q '"ok":true' "${body_file}"; then
+              echo "Ping OK - Supabase DB activity recorded"
+              exit 0
+            fi
+
+            if [ "${attempt}" -lt "${MAX_ATTEMPTS}" ]; then
+              echo "Not healthy yet (paused/waking or transient 503). Sleeping ${DELAY}s..."
+              sleep "${DELAY}"
+              DELAY=$((DELAY * 2))
+              if [ "${DELAY}" -gt 120 ]; then DELAY=120; fi
+            fi
+            attempt=$((attempt + 1))
+          done
+
+          echo "::error::Supabase keepalive failed after ${MAX_ATTEMPTS} attempts."
+          echo "::error::If the project is paused, resume it in the Supabase dashboard, then re-run this workflow."
+          echo "::error::Dashboard: https://supabase.com/dashboard/project/pwilnjxmecqpcbdemlmu"
+          exit 1
+
+      # GitHub disables scheduled workflows after long repo inactivity.
+      # Monday UTC (or manual dispatch) stamp commit keeps the schedule alive.
+      - name: Checkout for activity stamp
+        if: success()
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update weekly keepalive stamp
+        if: success()
+        run: |
+          set -euo pipefail
+          DOW="$(date -u +%u)"
+          if [ "${DOW}" != "1" ] && [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]; then
+            echo "Skip stamp (not Monday UTC and not manual dispatch)"
+            exit 0
+          fi
+
+          mkdir -p .github
+          stamp=".github/keepalive-stamp"
+          date -u +'%Y-%m-%dT%H:%M:%SZ keep-supabase-active' > "${stamp}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${stamp}"
+          if git diff --cached --quiet; then
+            echo "Stamp unchanged"
+            exit 0
+          fi
+          git commit -m "chore(ops): supabase keepalive stamp $(date -u +%Y-%m-%d)"
+          if git push origin HEAD:main; then
+            echo "Stamp pushed"
+          else
+            echo "::warning::Could not push keepalive stamp (non-fatal). Schedule ping still succeeded."
+          fi
