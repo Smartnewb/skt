@@ -5,8 +5,18 @@ import {
   sendSlackNotification,
   formatApplicationSlackMessage,
 } from '@/lib/slack';
+import { formatProductName } from '@/lib/productFormatter';
 
 export async function POST(request: NextRequest) {
+  // The full signup flow collects account/card/birthdate PII and is gated
+  // behind ENABLE_FULL_APPLY (default off) until Phase-1 hardening lands.
+  if (process.env.ENABLE_FULL_APPLY !== 'true') {
+    return NextResponse.json(
+      { error: '가입 신청은 현재 이용할 수 없습니다. 상담 신청을 이용해주세요.' },
+      { status: 403 }
+    );
+  }
+
   try {
     const body = await request.json();
     const applicationData: ApplicationData = body;
@@ -34,7 +44,12 @@ export async function POST(request: NextRequest) {
 
     const result = await createApplication(applicationData);
 
-    const slackMessage = formatApplicationSlackMessage(applicationData);
+    const productSummary = formatProductName(result.product);
+    const slackMessage = formatApplicationSlackMessage({
+      id: result.id,
+      applicantPhone: result.applicant?.contact?.phone,
+      productSummary,
+    });
     await sendSlackNotification(slackMessage);
 
     return NextResponse.json(

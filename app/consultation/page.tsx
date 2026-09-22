@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ProductSpeed,
@@ -18,6 +17,7 @@ import {
   formatPrice,
   formatGiftAmount,
 } from '@/lib/consultationPricing';
+import { ConsultationForm } from '@/components/consultation/ConsultationForm';
 
 const SPEEDS: ProductSpeed[] = ['100M', '500M', '1G'];
 const BUNDLES: ProductBundle[] = [
@@ -28,12 +28,7 @@ const BUNDLES: ProductBundle[] = [
 ];
 
 export default function ConsultationPricingPage() {
-  const router = useRouter();
   const [selectedSpeed, setSelectedSpeed] = useState<ProductSpeed>('500M');
-
-  const handleApply = () => {
-    router.push('/consultation/form');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-24">
@@ -45,14 +40,9 @@ export default function ConsultationPricingPage() {
           </h1>
         </div>
 
-        {/* Apply Button */}
-        <div className="mb-8 flex justify-center">
-          <button
-            onClick={handleApply}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-lg text-lg shadow-lg transition-all hover:shadow-xl"
-          >
-            상담 신청하기
-          </button>
+        {/* Minimal consultation form (Phase 0 public entry) */}
+        <div id="consultation-form" className="mb-8 max-w-2xl mx-auto">
+          <ConsultationForm />
         </div>
 
         <div className="text-center mb-6">

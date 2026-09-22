@@ -1,96 +1,74 @@
-# Admin Detail Page Debugging Guide
+# Admin Troubleshooting Guide (Phase-0 auth model)
 
-## Problem
-Admin detail page shows "신청서를 찾을 수 없습니다" (Application not found)
+## How admin auth works now
 
-## Diagnosis Steps
+- Login: `POST /api/admin/login` with `{ username, password }` — compared
+  server-side in constant time against `ADMIN_USERNAME` / `ADMIN_PASSWORD`
+  env vars. Never stored in the browser or shipped in `NEXT_PUBLIC_*` vars.
+- Session: `admin_session` httpOnly cookie holding an HMAC-signed JWT
+  (`ADMIN_SESSION_SECRET`), 12h expiry, `sameSite=lax`, `Secure` in
+  production. No `localStorage` flag — the old `admin_authenticated` key is
+  gone and does nothing.
+- Gate: `proxy.ts` (Next.js 16's renamed `middleware` convention) protects
+  `/admin/*` (redirects to `/admin/login`) and `/api/admin/*` (returns 401).
+- Logout: `POST /api/admin/logout` clears the cookie.
+- Rate limiting: 5 login attempts per 10 minutes per IP (in-memory,
+  best-effort — resets on redeploy / per serverless instance).
+- Data: admin pages fetch only `/api/admin/*`, which uses
+  `lib/supabaseServer.ts` (service role). The browser never queries
+  Supabase directly.
 
-### 1. Check Supabase Connection
-Visit: `http://localhost:3000/admin/test-supabase`
-- This page will show if Supabase is connected
-- Shows how many applications exist
-- Shows the actual data structure
+## Diagnosing problems
 
-### 2. Check Browser Console
-1. Open admin page
-2. Press F12 (Developer Tools)
-3. Go to Console tab
-4. Look for errors when clicking an application
+### Login fails with "서버 설정 오류" (500)
+`ADMIN_USERNAME`, `ADMIN_PASSWORD`, or `ADMIN_SESSION_SECRET` is missing.
+Check Vercel env vars and redeploy.
 
-### 3. Check Network Tab
-1. F12 → Network tab
-2. Click an application in admin list
-3. Look for failed requests
-4. Check if Supabase query is being made
+### Login always returns 401 with correct credentials
+- Confirm `ADMIN_USERNAME`/`ADMIN_PASSWORD` env vars match exactly
+  (watch for trailing whitespace — Vercel trims nothing).
+- `ADMIN_SESSION_SECRET` must be set; without it no cookie can be issued.
 
-### 4. Manual Supabase Check
-Open `/tmp/debug_admin.html` in browser to directly query Supabase
+### Logged in but immediately bounced back to /admin/login
+- Cookie not being sent: in dev, `Secure` is off; in prod it requires HTTPS.
+- Session expired (12h) — log in again.
+- `ADMIN_SESSION_SECRET` changed between deploys → all old sessions invalid.
 
-## Common Issues
+### /api/admin/* returns 401 in browser fetch
+- Requests must include credentials: `fetch(url, { credentials: 'include' })`
+  (all admin pages already do this).
+- If curl-testing manually: `-b "admin_session=<jwt>"`.
 
-### Issue 1: No data in Supabase
-**Solution:** Create a new application through the website
-1. Go to main page
-2. Complete full application flow
-3. Check admin page again
+### Login returns 429
+In-memory rate limit tripped — wait `Retry-After` seconds, or redeploy to
+reset (the limiter is per-instance by design).
 
-### Issue 2: Missing columns
-**Check:** Supabase dashboard → Table Editor → applications table
-**Should have:** product_category, product_discount_type columns
+### Applications/consultations lists are empty but data exists
+- `SUPABASE_SERVICE_ROLE_KEY` must be set — without it the server falls back
+  to the anon key, which is locked out by `006_rls_lockdown.sql` (by design).
+- Check that the operator applied `supabase/migrations/006_rls_lockdown.sql`;
+  after it, only the service role can read PII tables.
 
-### Issue 3: RLS (Row Level Security) blocking reads
-**Check:** Supabase dashboard → Authentication → Policies
-**Should have:** Policy allowing all operations OR anonymous read access
+### Memos don't persist
+Memos live in `consultation_logs` via
+`/api/admin/applications/[id]/logs` (service role). If the table is missing,
+apply `supabase/migrations/002_admin_enhancement.sql`.
 
-### Issue 4: Wrong Supabase credentials
-**Check:** `.env.local` file has correct URL and key
-**Match with:** Supabase dashboard → Project Settings → API
+### Health check `/api/health/supabase` returns 503
+Supabase unreachable or `SUPABASE_SERVICE_ROLE_KEY` missing/invalid —
+the endpoint only reports `ok:false` (no internals leak).
 
-## Quick Fixes
+## Verifying auth quickly
 
-### Fix 1: Add test data via Supabase SQL Editor
-```sql
-INSERT INTO applications (
-    product_id, product_category, product_speed, product_discount_type,
-    product_monthly_price, product_cash_benefit,
-    applicant_name, applicant_phone, applicant_email,
-    status
-) VALUES (
-    'test-1', 'INTERNET_TV', '500M', 'MOBILE_COMBO',
-    38500, 480000,
-    '홍길동', '010-1234-5678', 'test@example.com',
-    'PENDING'
-);
+```bash
+# 1. Login → cookie should come back as admin_session (httpOnly)
+curl -i -X POST https://<host>/api/admin/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"<user>","password":"<pass>"}'
+
+# 2. Unauthenticated admin API → must be 401
+curl -i https://<host>/api/admin/applications
+
+# 3. Unauthenticated admin page → must redirect to /admin/login
+curl -i https://<host>/admin
 ```
-
-### Fix 2: Check RLS Policies
-```sql
--- Check existing policies
-SELECT * FROM pg_policies WHERE tablename = 'applications';
-
--- If no policy exists, create one
-CREATE POLICY "Allow anonymous read" ON applications
-  FOR SELECT
-  USING (true);
-```
-
-### Fix 3: Verify table structure
-```sql
--- Check columns
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'applications';
-```
-
-## Expected Behavior
-1. Admin list shows applications
-2. Clicking one shows loading spinner
-3. Detail page loads with all info
-4. Can change status
-
-## If Still Not Working
-Run these in order and report results:
-1. Visit `/admin/test-supabase` - screenshot the output
-2. Browser console errors - copy exact error message
-3. Network tab - screenshot failed requests
-4. Supabase logs - check for query errors

@@ -3,7 +3,6 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { getApplication, updateApplicationStatus } from '@/lib/database';
 import { ApplicationData } from '@/types/application';
 import { getBankName } from '@/lib/bankNames';
 import { formatAccountNumber } from '@/lib/bankFormats';
@@ -14,7 +13,6 @@ import { RiskAlerts } from '@/components/admin/RiskBadge';
 import { PRICE_TABLES } from '@/lib/productPricing';
 import { formatCurrency } from '@/lib/validation';
 
-// Mock memos for now (will be replaced with Supabase)
 interface MemoEntry {
     id: string;
     adminName: string;
@@ -23,6 +21,29 @@ interface MemoEntry {
     callbackTime?: string;
     logType: 'memo' | 'status_change' | 'callback' | 'system';
     createdAt: string;
+}
+
+// consultation_logs row → TimelineMemo shape
+interface ConsultationLogRow {
+    id: string;
+    admin_name: string | null;
+    content: string;
+    is_pinned: boolean;
+    callback_time: string | null;
+    log_type: 'memo' | 'status_change' | 'callback' | 'system';
+    created_at: string;
+}
+
+function mapLogToMemo(row: ConsultationLogRow): MemoEntry {
+    return {
+        id: row.id,
+        adminName: row.admin_name || '관리자',
+        content: row.content,
+        isPinned: row.is_pinned,
+        callbackTime: row.callback_time ?? undefined,
+        logType: row.log_type,
+        createdAt: row.created_at,
+    };
 }
 
 // Generate application summary text for customer
@@ -132,13 +153,23 @@ export default function ApplicationDetailPage() {
     const loadApplication = async () => {
         setIsLoading(true);
         try {
-            const data = await getApplication(applicationId);
-            setApplication(data);
+            const [appRes, logsRes] = await Promise.all([
+                fetch(`/api/admin/applications/${applicationId}`, { credentials: 'include' }),
+                fetch(`/api/admin/applications/${applicationId}/logs`, { credentials: 'include' }),
+            ]);
 
-            // Load memos from localStorage for now
-            const storedMemos = localStorage.getItem(`memos_${applicationId}`);
-            if (storedMemos) {
-                setMemos(JSON.parse(storedMemos));
+            if (appRes.status === 401 || logsRes.status === 401) {
+                router.push('/admin/login');
+                return;
+            }
+
+            if (appRes.ok) {
+                const { application: data } = await appRes.json();
+                setApplication(data);
+            }
+            if (logsRes.ok) {
+                const { logs } = await logsRes.json();
+                setMemos((logs as ConsultationLogRow[]).map(mapLogToMemo));
             }
         } catch (error) {
             console.error('Error loading application:', error);
@@ -150,23 +181,38 @@ export default function ApplicationDetailPage() {
     const handleStatusChange = async (newStatus: AdminStatus) => {
         if (!application) return;
 
+        const oldStatus = application.status || 'PENDING';
         setIsSaving(true);
         try {
-            await updateApplicationStatus(applicationId, newStatus);
-            setApplication({ ...application, status: newStatus as any });
+            const res = await fetch(`/api/admin/applications/${applicationId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ status: newStatus }),
+            });
 
-            // Add system memo for status change
+            if (res.status === 401) {
+                router.push('/admin/login');
+                return;
+            }
+            if (!res.ok) {
+                throw new Error('상태 변경 실패');
+            }
+
+            const { application: updated } = await res.json();
+            setApplication(updated);
+
+            // status_history on the server covers the audit trail; mirror it
+            // as a timeline entry for the current view.
             const newMemo: MemoEntry = {
-                id: Date.now().toString(),
+                id: `local-${Date.now()}`,
                 adminName: '시스템',
-                content: `상태가 "${STATUS_CONFIG[mapOldStatus(application.status || 'PENDING')]?.label || application.status}"에서 "${STATUS_CONFIG[newStatus]?.label || newStatus}"로 변경되었습니다.`,
+                content: `상태가 "${STATUS_CONFIG[mapOldStatus(oldStatus)]?.label || oldStatus}"에서 "${STATUS_CONFIG[newStatus]?.label || newStatus}"로 변경되었습니다.`,
                 isPinned: false,
                 logType: 'status_change',
                 createdAt: new Date().toISOString(),
             };
-            const updatedMemos = [...memos, newMemo];
-            setMemos(updatedMemos);
-            localStorage.setItem(`memos_${applicationId}`, JSON.stringify(updatedMemos));
+            setMemos((prev) => [...prev, newMemo]);
         } catch (error) {
             console.error('Error updating status:', error);
         } finally {
@@ -174,27 +220,53 @@ export default function ApplicationDetailPage() {
         }
     };
 
-    const handleAddMemo = (content: string, callbackTime?: string) => {
-        const newMemo: MemoEntry = {
-            id: Date.now().toString(),
-            adminName: '관리자',
-            content,
-            isPinned: false,
-            callbackTime,
-            logType: callbackTime ? 'callback' : 'memo',
-            createdAt: new Date().toISOString(),
-        };
-        const updatedMemos = [...memos, newMemo];
-        setMemos(updatedMemos);
-        localStorage.setItem(`memos_${applicationId}`, JSON.stringify(updatedMemos));
+    const handleAddMemo = async (content: string, callbackTime?: string) => {
+        try {
+            const res = await fetch(`/api/admin/applications/${applicationId}/logs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ content, callbackTime }),
+            });
+
+            if (res.status === 401) {
+                router.push('/admin/login');
+                return;
+            }
+            if (!res.ok) {
+                throw new Error('메모 저장 실패');
+            }
+
+            const { log } = await res.json();
+            setMemos((prev) => [...prev, mapLogToMemo(log as ConsultationLogRow)]);
+        } catch (error) {
+            console.error('Error adding memo:', error);
+        }
     };
 
-    const handlePinMemo = (id: string, isPinned: boolean) => {
-        const updatedMemos = memos.map(m =>
-            m.id === id ? { ...m, isPinned } : m
-        );
-        setMemos(updatedMemos);
-        localStorage.setItem(`memos_${applicationId}`, JSON.stringify(updatedMemos));
+    const handlePinMemo = async (id: string, isPinned: boolean) => {
+        const previous = memos;
+        setMemos((prev) => prev.map((m) => (m.id === id ? { ...m, isPinned } : m)));
+
+        try {
+            const res = await fetch(`/api/admin/applications/${applicationId}/logs/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ isPinned }),
+            });
+
+            if (res.status === 401) {
+                router.push('/admin/login');
+                return;
+            }
+            if (!res.ok) {
+                throw new Error('메모 고정 변경 실패');
+            }
+        } catch (error) {
+            console.error('Error pinning memo:', error);
+            setMemos(previous);
+        }
     };
 
     // Risk check

@@ -1,6 +1,3 @@
-import { ConsultationData } from '@/types/consultation';
-import { ApplicationData } from '@/types/application';
-
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 
 interface SlackMessage {
@@ -16,6 +13,19 @@ interface SlackMessage {
       text: string;
     }>;
   }>;
+}
+
+/**
+ * Mask a Korean phone number: 010-1234-5678 → 010-****-5678.
+ * Slack messages must never contain the full number.
+ */
+export function maskPhone(phone?: string | null): string {
+  if (!phone) return '-';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length >= 8) {
+    return `${digits.slice(0, 3)}-****-${digits.slice(-4)}`;
+  }
+  return '***-****-****';
 }
 
 export async function sendSlackNotification(message: SlackMessage): Promise<boolean> {
@@ -45,15 +55,29 @@ export async function sendSlackNotification(message: SlackMessage): Promise<bool
   }
 }
 
-export function formatConsultationSlackMessage(data: ConsultationData): SlackMessage {
-  const productInfo = data.product
-    ? `${data.product.speed || '미선택'} / ${data.product.bundle || '미선택'}`
-    : '상품 미선택';
+const PREFERRED_TIME_LABELS: Record<string, string> = {
+  ANYTIME: '언제든지',
+  MORNING: '오전',
+  AFTERNOON: '오후',
+  EVENING: '저녁',
+};
 
-  const priceInfo = data.product
-    ? `월 ${data.product.monthlyPrice?.toLocaleString() || '정보 없음'}원 / 사은품 ${data.product.giftAmount?.toLocaleString() || '0'}원`
-    : '가격 정보 없음';
+interface ConsultationSlackInput {
+  /** Optional — absent when the anon fallback inserted without RETURNING. */
+  id?: string;
+  customerPhone: string;
+  interestedProduct?: string | null;
+  region?: string | null;
+  preferredTime?: string | null;
+}
 
+/**
+ * PII-safe consultation notification.
+ * Contains ONLY: record id, masked phone, interested product, region,
+ * preferred time. Never name / full phone / address / birthdate / account /
+ * card data.
+ */
+export function formatConsultationSlackMessage(data: ConsultationSlackInput): SlackMessage {
   return {
     text: '🔔 새로운 상담 신청이 접수되었습니다',
     blocks: [
@@ -69,11 +93,11 @@ export function formatConsultationSlackMessage(data: ConsultationData): SlackMes
         fields: [
           {
             type: 'mrkdwn',
-            text: `*고객명:*\n${data.customerName}`,
+            text: `*상담 ID:*\n${data.id ?? '-'}`,
           },
           {
             type: 'mrkdwn',
-            text: `*전화번호:*\n${data.customerPhone}`,
+            text: `*전화번호:*\n${maskPhone(data.customerPhone)}`,
           },
         ],
       },
@@ -82,32 +106,43 @@ export function formatConsultationSlackMessage(data: ConsultationData): SlackMes
         fields: [
           {
             type: 'mrkdwn',
-            text: `*상품 정보:*\n${productInfo}`,
+            text: `*관심 상품:*\n${data.interestedProduct || '미선택'}`,
           },
           {
             type: 'mrkdwn',
-            text: `*가격:*\n${priceInfo}`,
+            text: `*설치 지역:*\n${data.region || '미입력'}`,
           },
         ],
       },
       {
         type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*신청 시간:* ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`,
-        },
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*연락 희망 시간:*\n${data.preferredTime ? PREFERRED_TIME_LABELS[data.preferredTime] || data.preferredTime : '미선택'}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*신청 시간:*\n${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`,
+          },
+        ],
       },
     ],
   };
 }
 
-export function formatApplicationSlackMessage(data: ApplicationData): SlackMessage {
-  const productInfo = data.product?.tvType
-    ? `${data.product.speed} / ${data.product.tvType}`
-    : data.product?.speed || '상품 정보 없음';
-  const paymentMethod =
-    data.payment?.method === 'CARD' ? '카드 자동결제' : '계좌 자동이체';
+interface ApplicationSlackInput {
+  id: string;
+  applicantPhone?: string | null;
+  productSummary?: string | null;
+}
 
+/**
+ * PII-safe application notification.
+ * Contains ONLY: record id, masked phone, product summary.
+ * Never name / full phone / address / birthdate / account / card data.
+ */
+export function formatApplicationSlackMessage(data: ApplicationSlackInput): SlackMessage {
   return {
     text: '📝 새로운 가입 신청이 접수되었습니다',
     blocks: [
@@ -123,11 +158,11 @@ export function formatApplicationSlackMessage(data: ApplicationData): SlackMessa
         fields: [
           {
             type: 'mrkdwn',
-            text: `*신청자:*\n${data.applicant?.name || '정보 없음'}`,
+            text: `*신청 ID:*\n${data.id}`,
           },
           {
             type: 'mrkdwn',
-            text: `*전화번호:*\n${data.applicant?.contact?.phone || '정보 없음'}`,
+            text: `*전화번호:*\n${maskPhone(data.applicantPhone)}`,
           },
         ],
       },
@@ -136,33 +171,13 @@ export function formatApplicationSlackMessage(data: ApplicationData): SlackMessa
         fields: [
           {
             type: 'mrkdwn',
-            text: `*상품:*\n${productInfo}`,
+            text: `*상품:*\n${data.productSummary || '정보 없음'}`,
           },
           {
             type: 'mrkdwn',
-            text: `*월 납부액:*\n${data.product?.monthlyPrice?.toLocaleString() || '정보 없음'}원`,
+            text: `*신청 시간:*\n${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`,
           },
         ],
-      },
-      {
-        type: 'section',
-        fields: [
-          {
-            type: 'mrkdwn',
-            text: `*납부 방법:*\n${paymentMethod}`,
-          },
-          {
-            type: 'mrkdwn',
-            text: `*설치 주소:*\n${data.applicant?.address?.basic || '정보 없음'}`,
-          },
-        ],
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*신청 시간:* ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`,
-        },
       },
     ],
   };

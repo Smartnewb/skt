@@ -8,8 +8,6 @@ import { formatCurrency } from '@/lib/validation';
 import { StatusBadge, mapOldStatus } from '@/components/admin/StatusDropdown';
 import { ApplicationData } from '@/types/application';
 import { motion } from 'framer-motion';
-import { getApplications } from '@/lib/database';
-import { getConsultations } from '@/lib/consultationDatabase';
 import { ConsultationDbRecord } from '@/types/consultation';
 import { useAdminAuth, logout } from '@/lib/adminAuth';
 import { formatProductName } from '@/lib/productFormatter';
@@ -38,23 +36,26 @@ export default function AdminPage() {
     const loadApplications = async () => {
         setIsLoading(true);
         try {
-            // Load applications
-            const apps = await getApplications();
-            setApplications(apps);
+            const [appsRes, consultsRes] = await Promise.all([
+                fetch('/api/admin/applications', { credentials: 'include' }),
+                fetch('/api/admin/consultations', { credentials: 'include' }),
+            ]);
 
-            // Load consultations
-            const consults = await getConsultations();
-            setConsultations(consults);
-        } catch (error) {
-            console.error('Error loading from Supabase:', error);
-
-            // Fallback to localStorage
-            if (typeof window !== 'undefined') {
-                const stored = localStorage.getItem('applications');
-                if (stored) {
-                    setApplications(JSON.parse(stored));
-                }
+            if (appsRes.status === 401 || consultsRes.status === 401) {
+                router.push('/admin/login');
+                return;
             }
+
+            if (appsRes.ok) {
+                const { applications: apps } = await appsRes.json();
+                setApplications(apps);
+            }
+            if (consultsRes.ok) {
+                const { consultations: consults } = await consultsRes.json();
+                setConsultations(consults);
+            }
+        } catch (error) {
+            console.error('Error loading admin data:', error);
         } finally {
             setIsLoading(false);
         }

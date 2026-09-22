@@ -2,7 +2,6 @@
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { getApplications } from '@/lib/database';
 import { ApplicationData } from '@/types/application';
 import { StatusBadge, mapOldStatus } from '@/components/admin/StatusDropdown';
 import { useAdminAuth } from '@/lib/adminAuth';
@@ -27,8 +26,15 @@ export default function ApplicationsPage() {
     const loadApplications = async () => {
         setIsLoading(true);
         try {
-            const apps = await getApplications();
-            setApplications(apps);
+            const res = await fetch('/api/admin/applications', { credentials: 'include' });
+            if (res.status === 401) {
+                router.push('/admin/login');
+                return;
+            }
+            if (res.ok) {
+                const { applications: apps } = await res.json();
+                setApplications(apps);
+            }
         } catch (error) {
             console.error('Error loading applications:', error);
         } finally {

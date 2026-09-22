@@ -8,6 +8,8 @@ export type ProductBundle =
 
 export type DiscountType = 'GENERAL' | 'MOBILE' | 'FAMILY';
 
+export type PreferredTime = 'ANYTIME' | 'MORNING' | 'AFTERNOON' | 'EVENING';
+
 export interface ConsultationProduct {
   speed: ProductSpeed;
   bundle: ProductBundle;
@@ -16,23 +18,39 @@ export interface ConsultationProduct {
   giftAmount: number;
 }
 
+/**
+ * Minimal public consultation payload (Phase 0).
+ * Collects only name / phone / interested product / city-level region /
+ * preferred contact time / privacy consent. No detailed address, birthdate,
+ * account or card data.
+ */
 export interface ConsultationData {
-  product: ConsultationProduct | null;
   customerName: string;
   customerPhone: string;
+  interestedProduct: string;
+  region: string;
+  preferredTime: PreferredTime;
   privacyConsent: boolean;
+  consentVersion?: string;
+  consentedAt?: string;
 }
 
 export interface ConsultationDbRecord {
   id: string;
+  customer_name: string;
+  customer_phone: string;
+  interested_product: string | null;
+  region: string | null;
+  preferred_time: string | null;
+  privacy_consent: boolean;
+  consent_version: string | null;
+  consented_at: string | null;
+  // Legacy product-selection columns kept nullable for backward compatibility.
   product_speed: ProductSpeed | null;
   product_bundle: ProductBundle | null;
   discount_type: DiscountType | null;
   monthly_price: number | null;
   gift_amount: number | null;
-  customer_name: string;
-  customer_phone: string;
-  privacy_consent: boolean;
   status: 'PENDING' | 'CONTACTED' | 'COMPLETED';
   submitted_at: string;
   created_at: string;

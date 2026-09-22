@@ -3,6 +3,32 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 
+interface DaumPostcodeResult {
+    zonecode: string;
+    roadAddress?: string;
+    jibunAddress?: string;
+    buildingName?: string;
+}
+
+interface DaumPostcodeOptions {
+    oncomplete: (data: DaumPostcodeResult) => void;
+    onclose: () => void;
+    width: string;
+    height: string;
+}
+
+interface DaumPostcode {
+    embed: (element: HTMLElement | null) => void;
+}
+
+declare global {
+    interface Window {
+        daum?: {
+            Postcode: new (options: DaumPostcodeOptions) => DaumPostcode;
+        };
+    }
+}
+
 interface AddressSearchProps {
     onComplete: (data: {
         zonecode: string;
@@ -34,13 +60,14 @@ export const AddressSearch: React.FC<AddressSearchProps> = ({ onComplete }) => {
 
         // 스크립트 로드 후 실행
         setTimeout(() => {
-            if (typeof window !== 'undefined' && (window as any).daum) {
-                new (window as any).daum.Postcode({
-                    oncomplete: function (data: any) {
+            const daum = window.daum;
+            if (typeof window !== 'undefined' && daum) {
+                new daum.Postcode({
+                    oncomplete: function (data: DaumPostcodeResult) {
                         // 주소 선택 시 콜백
                         onComplete({
                             zonecode: data.zonecode,
-                            address: data.roadAddress || data.jibunAddress,
+                            address: data.roadAddress || data.jibunAddress || '',
                             buildingName: data.buildingName,
                         });
                         setIsOpen(false);
