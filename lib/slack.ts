@@ -63,7 +63,8 @@ const PREFERRED_TIME_LABELS: Record<string, string> = {
 };
 
 interface ConsultationSlackInput {
-  id: string;
+  /** Optional — absent when the anon fallback inserted without RETURNING. */
+  id?: string;
   customerPhone: string;
   interestedProduct?: string | null;
   region?: string | null;
@@ -92,7 +93,7 @@ export function formatConsultationSlackMessage(data: ConsultationSlackInput): Sl
         fields: [
           {
             type: 'mrkdwn',
-            text: `*상담 ID:*\n${data.id}`,
+            text: `*상담 ID:*\n${data.id ?? '-'}`,
           },
           {
             type: 'mrkdwn',

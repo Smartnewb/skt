@@ -5,8 +5,20 @@ export function transformConsultationToDb(
   data: ConsultationData
 ): Omit<
   ConsultationDbRecord,
-  'id' | 'status' | 'submitted_at' | 'created_at' | 'updated_at'
+  | 'id'
+  | 'status'
+  | 'submitted_at'
+  | 'created_at'
+  | 'updated_at'
+  | 'product_speed'
+  | 'product_bundle'
+  | 'discount_type'
+  | 'monthly_price'
+  | 'gift_amount'
 > {
+  // Payload contains ONLY columns granted to anon by 006_rls_lockdown.sql —
+  // supplying any other column (even as NULL) fails under the column-scoped
+  // INSERT grant when the server falls back to the anon key.
   return {
     customer_name: data.customerName,
     customer_phone: data.customerPhone,
@@ -16,31 +28,38 @@ export function transformConsultationToDb(
     privacy_consent: data.privacyConsent,
     consent_version: data.consentVersion ?? null,
     consented_at: data.consentedAt ?? null,
-    product_speed: null,
-    product_bundle: null,
-    discount_type: null,
-    monthly_price: null,
-    gift_amount: null,
   };
 }
 
+const INSERTED_COLS =
+  'id, customer_phone, interested_product, region, preferred_time, submitted_at, status';
+
 export async function createConsultation(
   data: ConsultationData
-): Promise<ConsultationDbRecord> {
+): Promise<ConsultationDbRecord | null> {
   const dbData = transformConsultationToDb(data);
+  const client = getSupabaseServer();
 
-  const { data: inserted, error } = await getSupabaseServer()
+  const { data: inserted, error } = await client
     .from('consultations')
     .insert(dbData)
-    .select('id, customer_phone, interested_product, region, preferred_time, submitted_at, status')
+    .select(INSERTED_COLS)
     .single();
 
-  if (error) {
-    console.error('Failed to create consultation:', error);
-    throw error;
+  if (!error) {
+    return inserted as ConsultationDbRecord;
   }
 
-  return inserted as ConsultationDbRecord;
+  // Under the anon fallback after 006_rls_lockdown.sql, INSERT ... RETURNING
+  // needs SELECT privileges anon lacks. The failed statement is atomic —
+  // nothing was written — so retry with a bare insert (return=minimal),
+  // which succeeds; the caller just doesn't get the row back.
+  const retry = await client.from('consultations').insert(dbData);
+  if (retry.error) {
+    console.error('Failed to create consultation:', retry.error);
+    throw retry.error;
+  }
+  return null;
 }
 
 export async function getConsultations(): Promise<ConsultationDbRecord[]> {

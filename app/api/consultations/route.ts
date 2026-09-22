@@ -144,11 +144,13 @@ export async function POST(request: NextRequest) {
     });
 
     const slackMessage = formatConsultationSlackMessage({
-      id: inserted.id,
-      customerPhone: inserted.customer_phone,
-      interestedProduct: inserted.interested_product,
-      region: inserted.region,
-      preferredTime: inserted.preferred_time,
+      // Under the anon fallback the insert succeeds without RETURNING, so
+      // `inserted` is null — send the notification without a record id.
+      id: inserted?.id,
+      customerPhone: inserted?.customer_phone ?? data.customerPhone,
+      interestedProduct: inserted?.interested_product ?? data.interestedProduct,
+      region: inserted?.region ?? data.region,
+      preferredTime: inserted?.preferred_time ?? data.preferredTime,
     });
     await sendSlackNotification(slackMessage);
 
