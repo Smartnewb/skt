@@ -1,26 +1,30 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseServer } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
   const startedAt = Date.now();
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseServer()
     .from('applications')
     .select('id')
     .limit(1);
 
   if (error) {
+    console.error('[health/supabase] check failed:', error);
     return NextResponse.json(
       {
         ok: false,
         service: 'supabase',
-        error: error.message,
-        code: error.code,
         elapsedMs: Date.now() - startedAt,
       },
-      { status: 503 }
+      {
+        status: 503,
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
     );
   }
 
