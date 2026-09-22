@@ -55,9 +55,30 @@ export async function createConsultation(
   // nothing was written — so retry with a bare insert (return=minimal),
   // which succeeds; the caller just doesn't get the row back.
   const retry = await client.from('consultations').insert(dbData);
-  if (retry.error) {
+  if (!retry.error) {
+    return null;
+  }
+
+  // Before 006_rls_lockdown.sql is applied the extras columns do not exist
+  // (PostgREST PGRST204 / Postgres 42703). In that window retry with only the
+  // original columns so submissions are still recorded; the extras start
+  // flowing once the migration is applied.
+  const missingColumn =
+    retry.error.code === '42703' ||
+    retry.error.code === 'PGRST204' ||
+    /column .* does not exist|Could not find the .* column/i.test(retry.error.message ?? '');
+  if (!missingColumn) {
     console.error('Failed to create consultation:', retry.error);
     throw retry.error;
+  }
+  const coreRetry = await client.from('consultations').insert({
+    customer_name: dbData.customer_name,
+    customer_phone: dbData.customer_phone,
+    privacy_consent: dbData.privacy_consent,
+  });
+  if (coreRetry.error) {
+    console.error('Failed to create consultation:', coreRetry.error);
+    throw coreRetry.error;
   }
   return null;
 }
